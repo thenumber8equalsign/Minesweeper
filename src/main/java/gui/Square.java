@@ -3,7 +3,6 @@ package gui;
 import javax.swing.JButton;
 
 public class Square extends JButton {
-
 	private final int NUMBER; // The number on the square, -1 if it is a bomb
 
 	private boolean revealed;
@@ -25,7 +24,15 @@ public class Square extends JButton {
 	}
 
 	/**
-	 * Sets revealed to true
+	 * Self-explanatory
+	 * @return this.NUMBER
+	 */
+	public int getNUMBER() {
+		return this.NUMBER;
+	}
+
+	/**
+	 * Sets this.revealed to true
 	 */
 	public void reveal() {
 		this.revealed = true;
