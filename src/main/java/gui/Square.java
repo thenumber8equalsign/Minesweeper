@@ -2,8 +2,20 @@ package gui;
 
 import javax.swing.JButton;
 import java.awt.Color;
+import java.util.Map;
 
 public class Square extends JButton {
+	public static final Map<Integer, Color> NUMBER_TO_COLOR_MAP = Map.ofEntries(
+			Map.entry(1, new Color(0x227FF2)),
+			Map.entry(2, new Color(0x067A09)),
+			Map.entry(3, new Color(0xB90000)),
+			Map.entry(4, new Color(0x124078)),
+			Map.entry(5, new Color(0x850505)),
+			Map.entry(6, new Color(0x148CAD)),
+			Map.entry(7, new Color(0x000000)),
+			Map.entry(8, new Color(0xA5A5A5))
+	);
+
 	private final int NUMBER; // The number on the square, -1 if it is a bomb
 
 	private boolean isRevealed;
@@ -40,6 +52,7 @@ public class Square extends JButton {
 
 
 		super.setBackground(new Color(0xFFBC5B));
+		super.setForeground(NUMBER_TO_COLOR_MAP.get(this.NUMBER));
 		if (this.NUMBER != 0) super.setText("" + this.NUMBER);
 	}
 
