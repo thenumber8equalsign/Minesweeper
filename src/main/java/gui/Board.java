@@ -33,15 +33,25 @@ public class Board extends JFrame implements ActionListener {
 	private int numRows;
 	private int numCols;
 	private int numBombs;
+	private int numFlags = 0;
 
 	private Square[][] squares;
 	private JMenuBar menuBar;
 	private JPanel field;
 
+	private JLabel flagsPlacedLabel;
+
 	private boolean lostGame = false;
 	private boolean wonGame = false;
 
 	public Board(int rows, int cols, int bombs) {
+		if (!(rows > 0 && cols > 0 && bombs >= 0 && bombs <= rows * cols)) {
+			throw new IllegalArgumentException();
+		}
+		this.numRows = rows;
+		this.numCols = cols;
+		this.numBombs = bombs;
+
 		this.setBounds(0, 0, 800, 600);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLayout(null);
@@ -86,6 +96,11 @@ public class Board extends JFrame implements ActionListener {
 
 		gameOptions.add(changeDimensions);
 		menuBar.add(gameOptions);
+
+		// Flags placed
+		flagsPlacedLabel = new JLabel("0 / " + numBombs + " bombs flagged");
+		flagsPlacedLabel.setFont(NOTO_MONO);
+		menuBar.add(flagsPlacedLabel);
 
 		// Set up the field
 		field = new JPanel();
@@ -203,16 +218,31 @@ public class Board extends JFrame implements ActionListener {
 									newHeight = s.getHeight();
 									newWidth = width * newHeight / height; // Given w1/h1 = w2/h2, w2 = h2w1/h1
 
+									int newWidthForWidth, newHeightForWidth;
+									// Scale the new width to be proportinal to the height
+									newWidthForWidth = s.getWidth();
+									newHeightForWidth = height * newWidthForWidth / width;
+
+									// now, set the newWidth and newHeight variables to contain whichever pair has the smaller width
+									if (newWidth > newWidthForWidth) {
+										newWidth = newWidthForWidth;
+										newHeight = newHeightForWidth;
+									}
+
 									Image newFlag = flag.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT);
 									s.setIcon(new ImageIcon(newFlag));
 
 									s.setIsFlagged(true);
+									++numFlags;
+									flagsPlacedLabel.setText(numFlags + " / " + numBombs + " bombs flagged");
 								} catch (IOException ex) {
 									System.err.println(ex);
 								}
 							} else {
 								s.setIcon(null);
 								s.setIsFlagged(false);
+								--numFlags;
+								flagsPlacedLabel.setText(numFlags + " / " + numBombs + " bombs flagged");
 							}
 						}
 					}
@@ -240,6 +270,53 @@ public class Board extends JFrame implements ActionListener {
 				//squares[i][j].setText("" + squares[i][j].getNUMBER());
 				squares[i][j].setFont(NOTO_MONO_BOLD);
 				field.add(squares[i][j]);
+			}
+		}
+	}
+
+	private void endGame(boolean won) {
+		System.out.println("You " + ((won) ? "Won" : "Lost"));
+	}
+
+	private void revealZeros() {
+		// Keep looping to reveal every neighboring square
+		for (; ; ) {
+			boolean revealed = false;
+			for (int i = 0; i < numRows; ++i) {
+				for (int j = 0; j < numCols; ++j) {
+					// There can be a maximum of 8 neighbors, test them all
+					// (i-1,j-1), (i-1, j ), (i-1,j+1)
+					// ( i ,j-1), ( i , j ), ( i ,j+1)
+					// (i+1,j-1), (i+1, j ), (i+1,j+1)
+					Point[] neighbors = new Point[]{
+							new Point(j - 1, i - 1), new Point(j, i - 1), new Point(j + 1, i - 1),
+							new Point(j - 1, i), new Point(j, i), new Point(j + 1, i),
+							new Point(j - 1, i + 1), new Point(j, i + 1), new Point(j + 1, i + 1)
+					};
+
+					for (int k = 0; k < neighbors.length; ++k) {
+						// Get the square of the current neighbor
+						try {
+							Square neighbor = squares[neighbors[k].y][neighbors[k].x];
+							if (neighbor.getIsRevealed() && neighbor.getNUMBER() == 0
+									&& !squares[i][j].getIsFlagged()
+									&& !squares[i][j].getIsRevealed()) {
+								// If the neighbor is a revealed 0, reveal the current square if it is not flagged
+								squares[i][j].reveal();
+								revealed = true;
+								break; // We've already revealed this square, we can exit this loop
+							}
+						} catch (IndexOutOfBoundsException ex) {
+							// Ignore it, keep going
+						} catch (BombException ex) {
+							// This should never happen
+						}
+					}
+				}
+			}
+
+			if (!revealed) {
+				break; // break if we've had a run where we never revealed anything
 			}
 		}
 	}
@@ -288,6 +365,66 @@ public class Board extends JFrame implements ActionListener {
 				if (s.getNUMBER() != 0) s.setText("" + s.getNUMBER());
 				// TODO: implement showing bombs when there is a bomb, losing, winning, and flood fill revealing all connected zeroes, and a different color for every number
 			}
+
+			// Reveal all connected zeros when a zero is clicked
+			if (s.getNUMBER() == 0 && s.getIsRevealed()) {
+				revealZeros();
+			} else if (s.getIsRevealed()) {
+				// Now, we need to check if the square is satisfied, if it is, then reveal all the non-flagged neighbors
+				int num = s.getNUMBER();
+				// There can be a maximum of 8 neighbors, test them all
+				// (i-1,j-1), (i-1, j ), (i-1,j+1)
+				// ( i ,j-1), ( i , j ), ( i ,j+1)
+				// (i+1,j-1), (i+1, j ), (i+1,j+1)
+
+				// Find our i and j values for the current square
+				int i, j = 0;
+				outer:
+				for (i = 0; i < numRows; ++i) {
+					for (j = 0; j < numCols; ++j) {
+						if (squares[i][j] == s) {
+							break outer;
+						}
+					}
+				}
+
+				Point[] neighbors = new Point[]{
+						new Point(j - 1, i - 1), new Point(j, i - 1), new Point(j + 1, i - 1),
+						new Point(j - 1, i), new Point(j, i), new Point(j + 1, i),
+						new Point(j - 1, i + 1), new Point(j, i + 1), new Point(j + 1, i + 1)
+				};
+
+				for (int k = 0; k < neighbors.length; ++k) {
+					try {
+						Square square = squares[neighbors[k].y][neighbors[k].x];
+						if (square.getIsFlagged()) {
+							--num;
+						}
+					} catch (IndexOutOfBoundsException ex) {
+						// Ignore it, keep going
+					}
+				}
+
+				if (num == 0) {
+					// The square is satisfied
+					for (int k = 0; k < neighbors.length; ++k) {
+						try {
+							Square square = squares[neighbors[k].y][neighbors[k].x];
+							if (!square.getIsFlagged()) {
+								square.reveal();
+							}
+						} catch (IndexOutOfBoundsException ex) {
+							// Ignore it, keep going
+						} catch (BombException ex) {
+							endGame(false);
+						}
+					}
+				}
+
+				// Reveal zeros in case we revealed some zeros, we need to reveal all the zeros connected to the revealed zeros
+				revealZeros();
+			}
+
 		}
 	}
 }
