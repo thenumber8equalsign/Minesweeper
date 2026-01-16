@@ -5,6 +5,6 @@ import gui.Board;
 public class Main {
 	static void main(String[] args) {
 		System.setProperty("awt.useSystemAAFontSettings", "on"); // anti-aliased text
-		new gui.Board(10, 10, 5);
+		new gui.Board(10, 10, 10);
 	}
 }
