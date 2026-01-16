@@ -41,7 +41,7 @@ public class Board extends JFrame implements ActionListener {
 
 	private JLabel flagsPlacedLabel;
 
-	private boolean lostGame = false;
+	private boolean gameOver = false;
 	private boolean wonGame = false;
 
 	public Board(int rows, int cols, int bombs) {
@@ -148,7 +148,7 @@ public class Board extends JFrame implements ActionListener {
 							} catch (IOException ex) {
 								System.err.println(ex);
 							}
-						} else if (s.isBomb() && lostGame) {
+						} else if (s.isBomb() && !wonGame) {
 							try {
 								BufferedImage bomb = ImageIO.read(Board.class.getClassLoader().getResource("icons/bomb.png"));
 								int width = bomb.getWidth(), height = bomb.getHeight();
@@ -404,7 +404,7 @@ public class Board extends JFrame implements ActionListener {
 			} else if (menuText.equals("File")) {
 				// TODO: Implement file options
 			}
-		} else if (e.getSource() instanceof Square s) {
+		} else if (e.getSource() instanceof Square s && !gameOver) {
 			if (!s.getIsFlagged() && !s.getIsRevealed()) {
 				try {
 					s.reveal();
@@ -467,6 +467,7 @@ public class Board extends JFrame implements ActionListener {
 							// Ignore it, keep going
 						} catch (BombException ex) {
 							endGame(false);
+							return;
 						}
 					}
 				}
