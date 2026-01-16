@@ -14,12 +14,14 @@ public class Board extends JFrame implements ActionListener {
 	public static final Font NOTO_MONO;
 	public static final Font NOTO_MONO_BOLD;
 	public static final FontMetrics NOTO_MONO_METRICS;
+	public static final int MENU_BAR_HEIGHT;
 
 	static {
 		try {
 			NOTO_MONO = Font.createFont(Font.TRUETYPE_FONT,
 					Board.class.getClassLoader().getResourceAsStream("fonts/notoMono.ttf")).deriveFont(20f);
 			NOTO_MONO_METRICS = new Canvas().getFontMetrics(NOTO_MONO);
+			MENU_BAR_HEIGHT = NOTO_MONO_METRICS.getHeight() + 6;
 
 			NOTO_MONO_BOLD = Font.createFont(Font.TRUETYPE_FONT,
 					Board.class.getClassLoader().getResourceAsStream("fonts/notoMonoBold.ttf")).deriveFont(24f);
@@ -52,7 +54,7 @@ public class Board extends JFrame implements ActionListener {
 		this.numCols = cols;
 		this.numBombs = bombs;
 
-		this.setBounds(0, 0, numCols * 600 / numRows, 600);
+		this.setBounds(0, 0, numCols * (600 - MENU_BAR_HEIGHT) / numRows, 600);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLayout(null);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -61,7 +63,7 @@ public class Board extends JFrame implements ActionListener {
 
 		menuBar = new JMenuBar();
 		menuBar.setFont(NOTO_MONO);
-		menuBar.setBounds(0, 0, this.getWidth(), NOTO_MONO_METRICS.getHeight() + 6);
+		menuBar.setBounds(0, 0, this.getWidth(), MENU_BAR_HEIGHT);
 
 		// Menu for saving game, loading game, and new game
 		JMenu fileOptions = new JMenu("File");
@@ -105,6 +107,7 @@ public class Board extends JFrame implements ActionListener {
 		// Set up the field
 		field = new JPanel();
 		field.setBounds(0, menuBar.getHeight(), getWidth(), 600 - menuBar.getHeight());
+		field.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 		generateField();
 
 		this.add(menuBar);
@@ -115,7 +118,7 @@ public class Board extends JFrame implements ActionListener {
 			public void componentResized(ComponentEvent e) {
 				// This is only called when the user releases the mouse button.
 				System.out.println("Resized, new width " + getWidth() + " new height " + getHeight());
-				// Resize the menubar and fieldPanel
+				// Resize the menuBar and fieldPanel
 				menuBar.setSize(getWidth(), menuBar.getHeight());
 				field.setSize(getWidth(), getHeight() - menuBar.getHeight());
 
@@ -148,7 +151,7 @@ public class Board extends JFrame implements ActionListener {
 							} catch (IOException ex) {
 								System.err.println(ex);
 							}
-						} else if (s.isBomb() && !wonGame) {
+						} else if (s.isBomb() && !wonGame && gameOver) {
 							try {
 								BufferedImage bomb = ImageIO.read(Board.class.getClassLoader().getResource("icons/bomb.png"));
 								int width = bomb.getWidth(), height = bomb.getHeight();
@@ -328,6 +331,10 @@ public class Board extends JFrame implements ActionListener {
 
 	private void endGame(boolean won) {
 		System.out.println("You " + ((won) ? "Won" : "Lost"));
+		this.gameOver = true;
+		this.wonGame = won;
+
+
 	}
 
 	private void revealZeros() {
@@ -409,7 +416,6 @@ public class Board extends JFrame implements ActionListener {
 				try {
 					s.reveal();
 				} catch (BombException ex) {
-					System.out.println("Uh Oh!");
 					endGame(false);
 					return;
 				}
