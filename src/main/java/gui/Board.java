@@ -52,7 +52,7 @@ public class Board extends JFrame implements ActionListener {
 		this.numCols = cols;
 		this.numBombs = bombs;
 
-		this.setBounds(0, 0, 800, 600);
+		this.setBounds(0, 0, numCols * 600 / numRows, 600);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLayout(null);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -61,7 +61,7 @@ public class Board extends JFrame implements ActionListener {
 
 		menuBar = new JMenuBar();
 		menuBar.setFont(NOTO_MONO);
-		menuBar.setBounds(0, 0, 800, NOTO_MONO_METRICS.getHeight() + 6);
+		menuBar.setBounds(0, 0, this.getWidth(), NOTO_MONO_METRICS.getHeight() + 6);
 
 		// Menu for saving game, loading game, and new game
 		JMenu fileOptions = new JMenu("File");
@@ -104,7 +104,7 @@ public class Board extends JFrame implements ActionListener {
 
 		// Set up the field
 		field = new JPanel();
-		field.setBounds(0, menuBar.getHeight(), 800, 600 - menuBar.getHeight());
+		field.setBounds(0, menuBar.getHeight(), getWidth(), 600 - menuBar.getHeight());
 		generateField();
 
 		this.add(menuBar);
@@ -176,8 +176,6 @@ public class Board extends JFrame implements ActionListener {
 						}
 					}
 				}
-
-				// TODO: resize the rest of the window to account for this
 			}
 		});
 	}
