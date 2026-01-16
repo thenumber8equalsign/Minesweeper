@@ -105,13 +105,6 @@ public class Board extends JFrame implements ActionListener {
 		// Set up the field
 		field = new JPanel();
 		field.setBounds(0, menuBar.getHeight(), 800, 600 - menuBar.getHeight());
-
-		if (!(rows > 0 && cols > 0 && bombs >= 0 && bombs <= rows * cols)) {
-			throw new IllegalArgumentException();
-		}
-		this.numRows = rows;
-		this.numCols = cols;
-		this.numBombs = bombs;
 		generateField();
 
 		this.add(menuBar);
@@ -122,6 +115,68 @@ public class Board extends JFrame implements ActionListener {
 			public void componentResized(ComponentEvent e) {
 				// This is only called when the user releases the mouse button.
 				System.out.println("Resized, new width " + getWidth() + " new height " + getHeight());
+				// Resize the menubar and fieldPanel
+				menuBar.setSize(getWidth(), menuBar.getHeight());
+				field.setSize(getWidth(), getHeight() - menuBar.getHeight());
+
+				// Resize all the icons on the squares
+				for (int i = 0; i < numRows; ++i) {
+					for (int j = 0; j < numCols; ++j) {
+						Square s = squares[i][j];
+						if (s.getIsFlagged()) {
+							try {
+								BufferedImage flag = ImageIO.read(Board.class.getClassLoader().getResource("icons/flag.png"));
+								int width = flag.getWidth(), height = flag.getHeight();
+								int newWidth, newHeight;
+								// Scale the new width to be proportional to the height
+								newHeight = s.getHeight();
+								newWidth = width * newHeight / height; // Given w1/h1 = w2/h2, w2 = h2w1/h1
+
+								int newWidthForWidth, newHeightForWidth;
+								// Scale the new width to be proportinal to the height
+								newWidthForWidth = s.getWidth();
+								newHeightForWidth = height * newWidthForWidth / width;
+
+								// now, set the newWidth and newHeight variables to contain whichever pair has the smaller width
+								if (newWidth > newWidthForWidth) {
+									newWidth = newWidthForWidth;
+									newHeight = newHeightForWidth;
+								}
+
+								Image newFlag = flag.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT);
+								s.setIcon(new ImageIcon(newFlag));
+							} catch (IOException ex) {
+								System.err.println(ex);
+							}
+						} else if (s.isBomb() && lostGame) {
+							try {
+								BufferedImage bomb = ImageIO.read(Board.class.getClassLoader().getResource("icons/bomb.png"));
+								int width = bomb.getWidth(), height = bomb.getHeight();
+								int newWidth, newHeight;
+								// Scale the new width to be proportional to the height
+								newHeight = s.getHeight();
+								newWidth = width * newHeight / height; // Given w1/h1 = w2/h2, w2 = h2w1/h1
+
+								int newWidthForWidth, newHeightForWidth;
+								// Scale the new width to be proportinal to the height
+								newWidthForWidth = s.getWidth();
+								newHeightForWidth = height * newWidthForWidth / width;
+
+								// now, set the newWidth and newHeight variables to contain whichever pair has the smaller width
+								if (newWidth > newWidthForWidth) {
+									newWidth = newWidthForWidth;
+									newHeight = newHeightForWidth;
+								}
+
+								Image newBomb = bomb.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT);
+								s.setIcon(new ImageIcon(newBomb));
+							} catch (IOException ex) {
+								System.err.println(ex);
+							}
+						}
+					}
+				}
+
 				// TODO: resize the rest of the window to account for this
 			}
 		});
@@ -210,7 +265,6 @@ public class Board extends JFrame implements ActionListener {
 
 							if (!s.getIsFlagged()) {
 								try {
-									// TODO: Instead of always resizing to fit the button height, resize to fit both and choose whichever has the most restrictions
 									BufferedImage flag = ImageIO.read(Board.class.getClassLoader().getResource("icons/flag.png"));
 									int width = flag.getWidth(), height = flag.getHeight();
 									int newWidth, newHeight;
@@ -358,12 +412,10 @@ public class Board extends JFrame implements ActionListener {
 					s.reveal();
 				} catch (BombException ex) {
 					System.out.println("Uh Oh!");
+					endGame(false);
 					return;
 				}
-
-				s.setBackground(new Color(0xFFBC5B));
-				if (s.getNUMBER() != 0) s.setText("" + s.getNUMBER());
-				// TODO: implement showing bombs when there is a bomb, losing, winning, and flood fill revealing all connected zeroes, and a different color for every number
+				// TODO: implement showing bombs when there is a bomb, losing, winning, and a different color for every number
 			}
 
 			// Reveal all connected zeros when a zero is clicked
