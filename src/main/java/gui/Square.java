@@ -25,6 +25,14 @@ public class Square extends JButton {
 
 	/**
 	 * Self-explanatory
+	 * @return true if this.NUMBER == -1, otherwise false
+	 */
+	public boolean isBomb() {
+		return this.NUMBER == -1;
+	}
+
+	/**
+	 * Self-explanatory
 	 * @return this.NUMBER
 	 */
 	public int getNUMBER() {
