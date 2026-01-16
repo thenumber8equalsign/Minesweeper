@@ -33,8 +33,12 @@ public class Square extends JButton {
 
 	/**
 	 * Sets this.revealed to true
+	 * @throws exceptions.BombException if this square is a bomb
 	 */
-	public void reveal() {
+	public void reveal() throws exceptions.BombException {
+		if (NUMBER == -1) {
+			throw new exceptions.BombException();
+		}
 		this.revealed = true;
 	}
 }
