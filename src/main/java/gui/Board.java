@@ -195,6 +195,7 @@ public class Board extends JFrame implements ActionListener {
 
 							if (!s.getIsFlagged()) {
 								try {
+									// TODO: Instead of always resizing to fit the button height, resize to fit both and choose whichever has the most restrictions
 									BufferedImage flag = ImageIO.read(Board.class.getClassLoader().getResource("icons/flag.png"));
 									int width = flag.getWidth(), height = flag.getHeight();
 									int newWidth, newHeight;
