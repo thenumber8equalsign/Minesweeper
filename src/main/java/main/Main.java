@@ -1,7 +1,10 @@
 package main;
 
+import gui.Board;
+
 public class Main {
 	static void main(String[] args) {
-		System.out.println("Hello, World");
+		System.setProperty("awt.useSystemAAFontSettings", "on"); // anti-aliased text
+		new gui.Board(10, 10, 5);
 	}
 }
