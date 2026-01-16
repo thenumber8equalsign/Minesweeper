@@ -1,6 +1,7 @@
 package gui;
 
 import javax.swing.JButton;
+import java.awt.Color;
 
 public class Square extends JButton {
 	private final int NUMBER; // The number on the square, -1 if it is a bomb
@@ -30,10 +31,16 @@ public class Square extends JButton {
 	 * @throws exceptions.BombException if this square is a bomb
 	 */
 	public void reveal() throws exceptions.BombException {
+		if (this.isFlagged) return;
+
 		if (NUMBER == -1) {
 			throw new exceptions.BombException();
 		}
 		this.isRevealed = true;
+
+
+		super.setBackground(new Color(0xFFBC5B));
+		if (this.NUMBER != 0) super.setText("" + this.NUMBER);
 	}
 
 	/**
