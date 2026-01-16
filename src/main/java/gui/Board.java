@@ -32,6 +32,8 @@ public class Board extends JFrame implements ActionListener {
 
 	private static final Random RANDOM = new Random();
 
+	private static final int DEFAULT_SQUARE_LENGTH = 54;
+
 	private int numRows;
 	private int numCols;
 	private int numBombs;
@@ -54,7 +56,7 @@ public class Board extends JFrame implements ActionListener {
 		this.numCols = cols;
 		this.numBombs = bombs;
 
-		this.setBounds(0, 0, numCols * (600 - MENU_BAR_HEIGHT) / numRows, 600);
+		this.setBounds(0, 0, numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLayout(null);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -100,13 +102,13 @@ public class Board extends JFrame implements ActionListener {
 		menuBar.add(gameOptions);
 
 		// Flags placed
-		flagsPlacedLabel = new JLabel("0 / " + numBombs + " bombs flagged");
+		flagsPlacedLabel = new JLabel("" + (numBombs -numFlags));
 		flagsPlacedLabel.setFont(NOTO_MONO);
 		menuBar.add(flagsPlacedLabel);
 
 		// Set up the field
 		field = new JPanel();
-		field.setBounds(0, menuBar.getHeight(), getWidth(), 600 - menuBar.getHeight());
+		field.setBounds(0, menuBar.getHeight(), getWidth(), this.getHeight() - menuBar.getHeight());
 		field.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 		generateField();
 
@@ -116,8 +118,6 @@ public class Board extends JFrame implements ActionListener {
 
 		this.getRootPane().addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
-				// This is only called when the user releases the mouse button.
-				System.out.println("Resized, new width " + getWidth() + " new height " + getHeight());
 				// Resize the menuBar and fieldPanel
 				menuBar.setSize(getWidth(), menuBar.getHeight());
 				field.setSize(getWidth(), getHeight() - menuBar.getHeight());
@@ -128,52 +128,14 @@ public class Board extends JFrame implements ActionListener {
 						Square s = squares[i][j];
 						if (s.getIsFlagged()) {
 							try {
-								BufferedImage flag = ImageIO.read(Board.class.getClassLoader().getResource("icons/flag.png"));
-								int width = flag.getWidth(), height = flag.getHeight();
-								int newWidth, newHeight;
-								// Scale the new width to be proportional to the height
-								newHeight = s.getHeight();
-								newWidth = width * newHeight / height; // Given w1/h1 = w2/h2, w2 = h2w1/h1
-
-								int newWidthForWidth, newHeightForWidth;
-								// Scale the new width to be proportinal to the height
-								newWidthForWidth = s.getWidth();
-								newHeightForWidth = height * newWidthForWidth / width;
-
-								// now, set the newWidth and newHeight variables to contain whichever pair has the smaller width
-								if (newWidth > newWidthForWidth) {
-									newWidth = newWidthForWidth;
-									newHeight = newHeightForWidth;
-								}
-
-								Image newFlag = flag.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT);
-								s.setIcon(new ImageIcon(newFlag));
-							} catch (IOException ex) {
+								setSquareIcon(s, "icons/flag.png");
+							} catch (Exception ex) {
 								System.err.println(ex);
 							}
 						} else if (s.isBomb() && !wonGame && gameOver) {
 							try {
-								BufferedImage bomb = ImageIO.read(Board.class.getClassLoader().getResource("icons/bomb.png"));
-								int width = bomb.getWidth(), height = bomb.getHeight();
-								int newWidth, newHeight;
-								// Scale the new width to be proportional to the height
-								newHeight = s.getHeight();
-								newWidth = width * newHeight / height; // Given w1/h1 = w2/h2, w2 = h2w1/h1
-
-								int newWidthForWidth, newHeightForWidth;
-								// Scale the new width to be proportinal to the height
-								newWidthForWidth = s.getWidth();
-								newHeightForWidth = height * newWidthForWidth / width;
-
-								// now, set the newWidth and newHeight variables to contain whichever pair has the smaller width
-								if (newWidth > newWidthForWidth) {
-									newWidth = newWidthForWidth;
-									newHeight = newHeightForWidth;
-								}
-
-								Image newBomb = bomb.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT);
-								s.setIcon(new ImageIcon(newBomb));
-							} catch (IOException ex) {
+								setSquareIcon(s, "icons/bomb.png");
+							} catch (Exception ex) {
 								System.err.println(ex);
 							}
 						}
@@ -181,6 +143,33 @@ public class Board extends JFrame implements ActionListener {
 				}
 			}
 		});
+	}
+
+	private void setSquareIcon(Square s, String path) throws IOException {
+		BufferedImage icon = ImageIO.read(Board.class.getClassLoader().getResource(path));
+		int width = icon.getWidth(), height = icon.getHeight();
+		int newWidth, newHeight;
+		// Scale the new width to be proportional to the height
+		newHeight = s.getHeight();
+		newWidth = width * newHeight / height; // Given w1/h1 = w2/h2, w2 = h2w1/h1
+
+		int newWidthForWidth, newHeightForWidth;
+		// Scale the new width to be proportinal to the height
+		newWidthForWidth = s.getWidth();
+		newHeightForWidth = height * newWidthForWidth / width;
+
+		// now, set the newWidth and newHeight variables to contain whichever pair has the smaller width
+		if (newWidth > newWidthForWidth) {
+			newWidth = newWidthForWidth;
+			newHeight = newHeightForWidth;
+		}
+
+		// Add a slight pad
+		newWidth -= 5;
+		newHeight -= 5;
+
+		Image newIcon = icon.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT);
+		s.setIcon(new ImageIcon(newIcon));
 	}
 
 	private void generateField() {
@@ -209,6 +198,7 @@ public class Board extends JFrame implements ActionListener {
 		squares = new Square[numRows][numCols];
 		for (int i = 0; i < numBombs; ++i) {
 			squares[bombLocations[i].y][bombLocations[i].x] = new Square(-1);
+			squares[bombLocations[i].y][bombLocations[i].x].setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
 		}
 
 		// Iterate through every square and determine its number
@@ -244,6 +234,7 @@ public class Board extends JFrame implements ActionListener {
 					}
 
 					squares[i][j] = new Square(numNeighborBombs);
+					squares[i][j].setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
 				}
 
 
@@ -264,40 +255,21 @@ public class Board extends JFrame implements ActionListener {
 							Square s = (Square) e.getSource();
 							if (s.getIsRevealed()) return; // Don't flag a revealed square
 
-							if (!s.getIsFlagged()) {
+							if (!s.getIsFlagged() && numBombs - numFlags > 0) {
 								try {
-									BufferedImage flag = ImageIO.read(Board.class.getClassLoader().getResource("icons/flag.png"));
-									int width = flag.getWidth(), height = flag.getHeight();
-									int newWidth, newHeight;
-									// Scale the new width to be proportional to the height
-									newHeight = s.getHeight();
-									newWidth = width * newHeight / height; // Given w1/h1 = w2/h2, w2 = h2w1/h1
-
-									int newWidthForWidth, newHeightForWidth;
-									// Scale the new width to be proportinal to the height
-									newWidthForWidth = s.getWidth();
-									newHeightForWidth = height * newWidthForWidth / width;
-
-									// now, set the newWidth and newHeight variables to contain whichever pair has the smaller width
-									if (newWidth > newWidthForWidth) {
-										newWidth = newWidthForWidth;
-										newHeight = newHeightForWidth;
-									}
-
-									Image newFlag = flag.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT);
-									s.setIcon(new ImageIcon(newFlag));
+									setSquareIcon(s, "icons/flag.png");
 
 									s.setIsFlagged(true);
 									++numFlags;
-									flagsPlacedLabel.setText(numFlags + " / " + numBombs + " bombs flagged");
-								} catch (IOException ex) {
+									flagsPlacedLabel.setText("" + (numBombs - numFlags));
+								} catch (Exception ex) {
 									System.err.println(ex);
 								}
-							} else {
+							} else if (s.getIsFlagged()) {
 								s.setIcon(null);
 								s.setIsFlagged(false);
 								--numFlags;
-								flagsPlacedLabel.setText(numFlags + " / " + numBombs + " bombs flagged");
+								flagsPlacedLabel.setText("" + (numBombs - numFlags));
 							}
 						}
 					}
@@ -322,7 +294,6 @@ public class Board extends JFrame implements ActionListener {
 
 					}
 				});
-				//squares[i][j].setText("" + squares[i][j].getNUMBER());
 				squares[i][j].setFont(NOTO_MONO_BOLD);
 				field.add(squares[i][j]);
 			}
@@ -330,10 +301,23 @@ public class Board extends JFrame implements ActionListener {
 	}
 
 	private void endGame(boolean won) {
-		System.out.println("You " + ((won) ? "Won" : "Lost"));
 		this.gameOver = true;
 		this.wonGame = won;
 
+		// Reveal all the bombs if we lost
+		if (!won) {
+			for (int i = 0; i < numRows; ++i) {
+				for (int j = 0; j < numCols; ++j) {
+					if (squares[i][j].isBomb()) {
+						try {
+							setSquareIcon(squares[i][j], "icons/bomb.png");
+						} catch (Exception ex) {
+
+						}
+					}
+				}
+			}
+		}
 
 	}
 
