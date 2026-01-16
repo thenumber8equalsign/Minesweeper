@@ -5,7 +5,8 @@ import javax.swing.JButton;
 public class Square extends JButton {
 	private final int NUMBER; // The number on the square, -1 if it is a bomb
 
-	private boolean revealed;
+	private boolean isRevealed;
+	private boolean isFlagged;
 
 	/**
 	 * Constructor
@@ -20,7 +21,19 @@ public class Square extends JButton {
 		}
 
 		this.NUMBER = number;
-		this.revealed = false;
+		this.isRevealed = false;
+		this.isFlagged = false;
+	}
+
+	/**
+	 * Sets this.revealed to true
+	 * @throws exceptions.BombException if this square is a bomb
+	 */
+	public void reveal() throws exceptions.BombException {
+		if (NUMBER == -1) {
+			throw new exceptions.BombException();
+		}
+		this.isRevealed = true;
 	}
 
 	/**
@@ -40,13 +53,26 @@ public class Square extends JButton {
 	}
 
 	/**
-	 * Sets this.revealed to true
-	 * @throws exceptions.BombException if this square is a bomb
+	 * Self-explanatory
+	 * @return this.isRevealed
 	 */
-	public void reveal() throws exceptions.BombException {
-		if (NUMBER == -1) {
-			throw new exceptions.BombException();
-		}
-		this.revealed = true;
+	public boolean getIsRevealed() {
+		return this.isRevealed;
+	}
+
+	/**
+	 * Self-explanatory
+	 * @return this.isFlagged
+	 */
+	public boolean getIsFlagged() {
+		return this.isFlagged;
+	}
+
+	/**
+	 * Self-explanatory
+	 * @param isFlagged the new value for this.isFlagged
+	 */
+	public void setIsFlagged(boolean isFlagged) {
+		this.isFlagged = isFlagged;
 	}
 }
