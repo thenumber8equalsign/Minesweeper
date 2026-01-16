@@ -102,7 +102,7 @@ public class Board extends JFrame implements ActionListener {
 		menuBar.add(gameOptions);
 
 		// Flags placed
-		flagsPlacedLabel = new JLabel("" + (numBombs -numFlags));
+		flagsPlacedLabel = new JLabel("" + (numBombs - numFlags));
 		flagsPlacedLabel.setFont(NOTO_MONO);
 		menuBar.add(flagsPlacedLabel);
 
@@ -248,7 +248,11 @@ public class Board extends JFrame implements ActionListener {
 
 				squares[i][j].addActionListener(this);
 				// For some stupid reason, actionPerformed doesn't get invoked when right click, so we have to manually do this
+				final int FINAL_I = i;
+				final int FINAL_J = j;
 				squares[i][j].addMouseListener(new MouseListener() {
+					private final Color SQUARE_COLOR = squares[FINAL_I][FINAL_J].getBackground();
+
 					@Override
 					public void mouseClicked(MouseEvent e) {
 						if (SwingUtilities.isRightMouseButton(e)) {
@@ -286,12 +290,20 @@ public class Board extends JFrame implements ActionListener {
 
 					@Override
 					public void mouseEntered(MouseEvent mouseEvent) {
-
+						if (mouseEvent.getSource() instanceof Square s) {
+							s.setBackground(new Color(0xC9C9C9));
+						}
 					}
 
 					@Override
 					public void mouseExited(MouseEvent mouseEvent) {
-
+						if (mouseEvent.getSource() instanceof Square s) {
+							if (!s.getIsRevealed()) {
+								s.setBackground(SQUARE_COLOR);
+							} else {
+								s.setBackground(new Color(0xFFBC5B)); // Show the revealed color if the square is revealed
+							}
+						}
 					}
 				});
 				squares[i][j].setFont(NOTO_MONO_BOLD);
