@@ -176,7 +176,11 @@ public class Board extends JFrame implements ActionListener {
 
 	private void generateField() {
 		field.removeAll(); // Clear the buttons
+		field.repaint();
+		field.revalidate(); // I have no idea why we need to do this, we just do
 		field.setLayout(new GridLayout(numRows, numCols)); // Reset the layout
+
+		flagsPlacedLabel.setText("" + (numBombs - numFlags));
 
 		Point[] bombLocations = new Point[numBombs];
 		for (int i = 0; i < numBombs; ++i) {
@@ -262,7 +266,7 @@ public class Board extends JFrame implements ActionListener {
 				// Also we need to create final copies of i and j if we wish to use them in the anonymous class
 				final int FINAL_I = i;
 				final int FINAL_J = j;
-				squares[i][j].addMouseListener(new MouseListener() {
+				squares[i][j].addMouseListener(new MouseAdapter() {
 					private final Color SQUARE_COLOR = squares[FINAL_I][FINAL_J].getBackground();
 
 					@Override
@@ -288,16 +292,6 @@ public class Board extends JFrame implements ActionListener {
 								flagsPlacedLabel.setText("" + (numBombs - numFlags));
 							}
 						}
-					}
-
-					@Override
-					public void mousePressed(MouseEvent mouseEvent) {
-
-					}
-
-					@Override
-					public void mouseReleased(MouseEvent mouseEvent) {
-
 					}
 
 					@Override
@@ -339,6 +333,12 @@ public class Board extends JFrame implements ActionListener {
 							setSquareIcon(squares[i][j], "icons/bomb.png");
 						} catch (Exception ex) {
 
+						}
+					} else {
+						try {
+							squares[i][j].reveal();
+						} catch (BombException ex) {
+							// This should never happen
 						}
 					}
 				}
@@ -402,8 +402,11 @@ public class Board extends JFrame implements ActionListener {
 
 		popup.add(panel);
 		popup.pack(); // Resize the JDialog to fit its children
-		popup.setLocationRelativeTo(null);
+		popup.setLocationRelativeTo(this); // Center it in this window
+		popup.setResizable(false);
 		popup.setVisible(true);
+
+		popup.requestFocus();
 	}
 
 	private void revealZeros() {
@@ -450,7 +453,11 @@ public class Board extends JFrame implements ActionListener {
 	}
 
 	private void newGame() {
-		System.out.println("Making new game");
+		this.firstClick = true;
+		this.hasX = false;
+		this.wonGame = false;
+		this.gameOver = false;
+		generateField();
 	}
 
 	private void saveGame() {
@@ -496,6 +503,9 @@ public class Board extends JFrame implements ActionListener {
 				}
 			} else if (menuText.equals("File")) {
 				// TODO: Implement file options
+				if (menuItemText.equals("New")) {
+					newGame();
+				}
 			}
 		} else if (e.getSource() instanceof Square s && !gameOver) {
 			// If this is the first click, ensure the user only clicks on the "X", assuming that there is an X
