@@ -105,6 +105,7 @@ public class Square extends JButton {
 	 * @param isFlagged the new value for this.isFlagged
 	 */
 	public void setIsFlagged(boolean isFlagged) {
+		if (this.isRevealed) return; // Don't flag a revealed square
 		this.isFlagged = isFlagged;
 	}
 }
