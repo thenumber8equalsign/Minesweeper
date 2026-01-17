@@ -47,6 +47,8 @@ public class Board extends JFrame implements ActionListener {
 
 	private boolean gameOver = false;
 	private boolean wonGame = false;
+	private boolean firstClick = true;
+	private boolean hasX = false; // This boolean will store if our board has an "X" on it to mark which square the user should click first
 
 	public Board(int rows, int cols, int bombs) {
 		if (!(rows > 0 && cols > 0 && bombs >= 0 && bombs <= rows * cols)) {
@@ -59,7 +61,6 @@ public class Board extends JFrame implements ActionListener {
 		this.setBounds(0, 0, numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLayout(null);
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null); // Center the window
 
 
@@ -117,6 +118,7 @@ public class Board extends JFrame implements ActionListener {
 		this.setVisible(true);
 
 		this.getRootPane().addComponentListener(new ComponentAdapter() {
+			@Override
 			public void componentResized(ComponentEvent e) {
 				// Resize the menuBar and fieldPanel
 				menuBar.setSize(getWidth(), menuBar.getHeight());
@@ -154,7 +156,7 @@ public class Board extends JFrame implements ActionListener {
 		newWidth = width * newHeight / height; // Given w1/h1 = w2/h2, w2 = h2w1/h1
 
 		int newWidthForWidth, newHeightForWidth;
-		// Scale the new width to be proportinal to the height
+		// Scale the new width to be proportional to the height
 		newWidthForWidth = s.getWidth();
 		newHeightForWidth = height * newWidthForWidth / width;
 
@@ -202,6 +204,7 @@ public class Board extends JFrame implements ActionListener {
 		}
 
 		// Iterate through every square and determine its number
+		hasX = false;
 		for (int i = 0; i < numRows; ++i) {
 			for (int j = 0; j < numCols; ++j) {
 				// Note: j is x
@@ -235,6 +238,13 @@ public class Board extends JFrame implements ActionListener {
 
 					squares[i][j] = new Square(numNeighborBombs);
 					squares[i][j].setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
+
+					// put an x on the first 0 we find, that way the user doesn't have to guess on the first click
+					if (squares[i][j].getNUMBER() == 0 && !hasX) {
+						hasX = true;
+						squares[i][j].setForeground(Color.DARK_GRAY);
+						squares[i][j].setText("<html>&times;</html>");
+					}
 				}
 
 
@@ -247,7 +257,9 @@ public class Board extends JFrame implements ActionListener {
 				}
 
 				squares[i][j].addActionListener(this);
+
 				// For some stupid reason, actionPerformed doesn't get invoked when right click, so we have to manually do this
+				// Also we need to create final copies of i and j if we wish to use them in the anonymous class
 				final int FINAL_I = i;
 				final int FINAL_J = j;
 				squares[i][j].addMouseListener(new MouseListener() {
@@ -306,7 +318,9 @@ public class Board extends JFrame implements ActionListener {
 						}
 					}
 				});
+
 				squares[i][j].setFont(NOTO_MONO_BOLD);
+				squares[i][j].setFocusPainted(false); // Do not outline the text when it is focused
 				field.add(squares[i][j]);
 			}
 		}
@@ -316,8 +330,8 @@ public class Board extends JFrame implements ActionListener {
 		this.gameOver = true;
 		this.wonGame = won;
 
-		// Reveal all the bombs if we lost
 		if (!won) {
+			// Reveal all the bombs if we lost
 			for (int i = 0; i < numRows; ++i) {
 				for (int j = 0; j < numCols; ++j) {
 					if (squares[i][j].isBomb()) {
@@ -484,6 +498,13 @@ public class Board extends JFrame implements ActionListener {
 				// TODO: Implement file options
 			}
 		} else if (e.getSource() instanceof Square s && !gameOver) {
+			// If this is the first click, ensure the user only clicks on the "X", assuming that there is an X
+			// Since there may be no 0s, we can only enable this limitation if there is an x on the board
+			if (firstClick && hasX && !s.getText().equals("<html>&times;</html>")) {
+				return;
+			}
+
+			firstClick = false;
 			if (!s.getIsFlagged() && !s.getIsRevealed()) {
 				try {
 					s.reveal();
@@ -491,14 +512,13 @@ public class Board extends JFrame implements ActionListener {
 					endGame(false);
 					return;
 				}
-				// TODO: implement showing bombs when there is a bomb, losing, winning, and a different color for every number
 			}
 
 			// Reveal all connected zeros when a zero is clicked
 			if (s.getNUMBER() == 0 && s.getIsRevealed()) {
 				revealZeros();
 			} else if (s.getIsRevealed()) {
-				// Now, we need to check if the square is satisfied, if it is, then reveal all the non-flagged neighbors
+				// Check if the square is satisfied, if it is, then reveal all the non-flagged neighbors
 				int num = s.getNUMBER();
 				// There can be a maximum of 8 neighbors, test them all
 				// (i-1,j-1), (i-1, j ), (i-1,j+1)
