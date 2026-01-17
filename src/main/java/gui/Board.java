@@ -188,7 +188,7 @@ public class Board extends JFrame implements ActionListener {
 			x = RANDOM.nextInt(numCols);
 			y = RANDOM.nextInt(numRows);
 
-			bombLocations[i] = new Point(x, y);
+			bombLocations[i] = new Point(x, y);;
 
 			// Check if there is already a bomb here
 			for (int j = 0; j < i; ++j) {
