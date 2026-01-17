@@ -23,8 +23,9 @@ public class Square extends JButton {
 
 	/**
 	 * Constructor
+	 *
 	 * @param number the number shown on the square,
-	 *      if you don't know what this is in the context of minesweeper, you should not be reading this
+	 *               if you don't know what this is in the context of minesweeper, you should not be reading this
 	 * @throws IllegalArgumentException if number is out of the range [-1]U[0,8]
 	 */
 	public Square(int number) {
@@ -40,12 +41,13 @@ public class Square extends JButton {
 
 	/**
 	 * Sets this.revealed to true
+	 *
 	 * @throws exceptions.BombException if this square is a bomb
 	 */
 	public void reveal() throws exceptions.BombException {
 		if (this.isFlagged) return;
 
-		if (NUMBER == -1) {
+		if (isBomb()) {
 			throw new exceptions.BombException();
 		}
 		this.isRevealed = true;
@@ -53,11 +55,17 @@ public class Square extends JButton {
 
 		super.setBackground(new Color(0xFFBC5B));
 		super.setForeground(NUMBER_TO_COLOR_MAP.get(this.NUMBER));
-		if (this.NUMBER != 0) super.setText("" + this.NUMBER);
+
+		if (this.NUMBER != 0) {
+			super.setText("" + this.NUMBER);
+		} else {
+			super.setText("");
+		}
 	}
 
 	/**
 	 * Self-explanatory
+	 *
 	 * @return true if this.NUMBER == -1, otherwise false
 	 */
 	public boolean isBomb() {
@@ -66,6 +74,7 @@ public class Square extends JButton {
 
 	/**
 	 * Self-explanatory
+	 *
 	 * @return this.NUMBER
 	 */
 	public int getNUMBER() {
@@ -74,6 +83,7 @@ public class Square extends JButton {
 
 	/**
 	 * Self-explanatory
+	 *
 	 * @return this.isRevealed
 	 */
 	public boolean getIsRevealed() {
@@ -82,6 +92,7 @@ public class Square extends JButton {
 
 	/**
 	 * Self-explanatory
+	 *
 	 * @return this.isFlagged
 	 */
 	public boolean getIsFlagged() {
@@ -90,6 +101,7 @@ public class Square extends JButton {
 
 	/**
 	 * Self-explanatory
+	 *
 	 * @param isFlagged the new value for this.isFlagged
 	 */
 	public void setIsFlagged(boolean isFlagged) {
