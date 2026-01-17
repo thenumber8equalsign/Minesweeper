@@ -435,6 +435,23 @@ public class Board extends JFrame implements ActionListener {
 		}
 	}
 
+	private void newGame() {
+		System.out.println("Making new game");
+	}
+
+	private void saveGame() {
+		System.out.println("Saving game");
+	}
+
+	private static String[] getSavedGames() {
+		System.out.println("Getting games");
+		return new String[]{};
+	}
+
+	private void loadGame(String name) throws ClassNotFoundException {
+		System.out.println("Loading games");
+	}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() instanceof JMenuItem mi) {
