@@ -577,6 +577,19 @@ public class Board extends JFrame implements ActionListener {
 				revealZeros();
 			}
 
+
+			// Now we need to determine if we won the game by checking if all the non-bombs have been clicked
+			int numSquares = numRows * numCols - numBombs;
+			for (int i = 0; i < numRows; ++i) {
+				for (int j = 0; j < numCols; ++j) {
+					if (squares[i][j].getIsRevealed()) {
+						--numSquares;
+					}
+				}
+			}
+			if (numSquares == 0) {
+				endGame(true);
+			}
 		}
 	}
 }
