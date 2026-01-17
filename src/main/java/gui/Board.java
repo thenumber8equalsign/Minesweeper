@@ -331,6 +331,65 @@ public class Board extends JFrame implements ActionListener {
 			}
 		}
 
+		// Show a popup window
+		JFrame popup = new JFrame();
+		popup.setTitle("You " + ((won) ? "Won" : "Lost"));
+		popup.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+		JPanel panel = new JPanel();
+		panel.setLayout(new GridBagLayout());
+
+
+		JLabel wonLabel = new JLabel(popup.getTitle() + "!");
+		wonLabel.setFont(NOTO_MONO);
+		wonLabel.setHorizontalAlignment(JLabel.CENTER);
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(10, 10, 5, 10); // the bottom edge is the only one that does not face the end, so it is set to 5 instead of 10
+		c.gridwidth = 2;
+		panel.add(wonLabel, c);
+
+		JButton closeButton = new JButton("Close");
+		closeButton.setFont(NOTO_MONO);
+		closeButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				popup.dispose();
+			}
+		});
+
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 1;
+		c.gridwidth = 1; // The previous gridwidth was 2, so we need to set it back to 1
+		c.insets = new Insets(0, 10, 10, 5); // right is 5 because right faces a different button, the top faces the label, which already has the insets
+		panel.add(closeButton, c);
+
+		JButton newGameButton = new JButton("New Game");
+		newGameButton.setFont(NOTO_MONO);
+		newGameButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				newGame();
+				popup.dispose();
+			}
+		});
+
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = 1;
+		c.insets = new Insets(0, 0, 10, 10); // top and left already have their insets set by the other components
+		panel.add(newGameButton, c);
+
+		closeButton.setPreferredSize(newGameButton.getPreferredSize()); // Set a uniform width for the two buttons
+
+		popup.add(panel);
+		popup.pack(); // Resize the JDialog to fit its children
+		popup.setLocationRelativeTo(null);
+		popup.setVisible(true);
 	}
 
 	private void revealZeros() {
