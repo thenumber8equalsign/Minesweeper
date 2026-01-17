@@ -504,10 +504,12 @@ public class Board extends JFrame implements ActionListener {
 				return;
 			}
 
+			boolean revealedSquare = false;
 			firstClick = false;
 			if (!s.getIsFlagged() && !s.getIsRevealed()) {
 				try {
 					s.reveal();
+					revealedSquare = true;
 				} catch (BombException ex) {
 					endGame(false);
 					return;
@@ -517,8 +519,9 @@ public class Board extends JFrame implements ActionListener {
 			// Reveal all connected zeros when a zero is clicked
 			if (s.getNUMBER() == 0 && s.getIsRevealed()) {
 				revealZeros();
-			} else if (s.getIsRevealed()) {
-				// Check if the square is satisfied, if it is, then reveal all the non-flagged neighbors
+			} else if (s.getIsRevealed() && !revealedSquare) {
+				// If we click on a revealed square that was not a zero, and this square was not revealed this turn,
+				// check if the square is satisfied, if it is, then reveal all the non-flagged neighbors
 				int num = s.getNUMBER();
 				// There can be a maximum of 8 neighbors, test them all
 				// (i-1,j-1), (i-1, j ), (i-1,j+1)
