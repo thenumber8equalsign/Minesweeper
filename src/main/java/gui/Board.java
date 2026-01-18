@@ -111,19 +111,22 @@ public class Board extends JFrame implements ActionListener {
 		field = new JPanel();
 		field.setBounds(0, menuBar.getHeight(), getWidth(), this.getHeight() - menuBar.getHeight());
 		field.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-		generateField();
 
 		this.add(menuBar);
 		this.add(field);
 		this.setVisible(true);
+
+		generateField();
+		setSize(getWidth(), getHeight() + getInsets().top);
 
 		this.getRootPane().addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
 				// Resize the menuBar and fieldPanel
 				menuBar.setSize(getWidth(), menuBar.getHeight());
-				field.setSize(getWidth(), getHeight() - menuBar.getHeight());
+				field.setSize(getWidth(), getHeight() - menuBar.getHeight() - getInsets().top);
 
+				System.out.println("resize");
 				// Resize all the icons on the squares
 				for (int i = 0; i < numRows; ++i) {
 					for (int j = 0; j < numCols; ++j) {
@@ -457,6 +460,7 @@ public class Board extends JFrame implements ActionListener {
 		this.hasX = false;
 		this.wonGame = false;
 		this.gameOver = false;
+		this.numFlags = 0;
 		generateField();
 	}
 
