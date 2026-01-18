@@ -1,0 +1,3 @@
+# BASH:
+mvn compile
+jar cfm ${output file} MANIFEST.MF -C target/classes/ .
