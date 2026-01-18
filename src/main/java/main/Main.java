@@ -1,7 +1,5 @@
 package main;
 
-import gui.Board;
-
 public class Main {
 	static void main(String[] args) {
 		System.setProperty("awt.useSystemAAFontSettings", "on"); // anti-aliased text
