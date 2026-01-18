@@ -1,3 +1,6 @@
 # BASH:
 mvn compile
 jar cfm output.jar MANIFEST.MF -C target/classes/ .
+
+# to run:
+java -jar output.jar
