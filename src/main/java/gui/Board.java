@@ -19,10 +19,12 @@ public class Board extends JFrame implements ActionListener {
 
 	static {
 		JFrame temp = new JFrame(); // Use to get the insets
-		temp.pack();
+		temp.setBounds(0, 0, 100, 100);
+		temp.setVisible(true);
+		//temp.pack();
 
 		FRAME_INSETS = temp.getInsets();
-
+		temp.dispose();
 		temp = null;
 		try {
 			NOTO_MONO = Font.createFont(Font.TRUETYPE_FONT,
@@ -65,15 +67,19 @@ public class Board extends JFrame implements ActionListener {
 		this.numCols = cols;
 		this.numBombs = bombs;
 
-		this.setBounds(0, 0, numCols * DEFAULT_SQUARE_LENGTH + FRAME_INSETS.left + FRAME_INSETS.right, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT + FRAME_INSETS.top + FRAME_INSETS.bottom);
+		//this.setBounds(0, 0, numCols * DEFAULT_SQUARE_LENGTH + FRAME_INSETS.left + FRAME_INSETS.right, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT + FRAME_INSETS.top + FRAME_INSETS.bottom);
+
+		JPanel panel = new JPanel();
+		panel.setLayout(null);
+		panel.setPreferredSize(new Dimension(numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT));
+
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setTitle("Minesweeper");
-		this.setLayout(null);
 		this.setLocationRelativeTo(null); // Center the window
 
 		menuBar = new JMenuBar();
 		menuBar.setFont(NOTO_MONO);
-		menuBar.setBounds(0, 0, this.getWidth(), MENU_BAR_HEIGHT);
+		menuBar.setBounds(0, 0, panel.getPreferredSize().width, MENU_BAR_HEIGHT);
 
 		// Menu for saving game, loading game, and new game
 		JMenu fileOptions = new JMenu("File");
@@ -118,24 +124,24 @@ public class Board extends JFrame implements ActionListener {
 		field = new JPanel();
 		field.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
-		field.setBounds(0, menuBar.getHeight(), this.getWidth(), this.getHeight() - menuBar.getHeight() - FRAME_INSETS.top - FRAME_INSETS.bottom);
+		field.setBounds(0, menuBar.getHeight(), panel.getPreferredSize().width, panel.getPreferredSize().height - menuBar.getHeight());
 
 		generateField();
 
-		this.add(menuBar);
-		this.add(field);
+		panel.add(menuBar);
+		panel.add(field);
+		System.out.println(menuBar.getBounds());
+		this.add(panel);
+		this.pack();
 		this.setVisible(true);
 
 
-		System.out.println(getContentPane().getSize());
-		System.out.println(getSize());
-		System.out.println(FRAME_INSETS);
 		this.getRootPane().addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
 				// Resize the menuBar and fieldPanel
-				menuBar.setSize(getWidth(), menuBar.getHeight());
-				field.setSize(getWidth(), getHeight() - menuBar.getHeight() - FRAME_INSETS.top - FRAME_INSETS.bottom);
+				/*menuBar.setSize(getWidth() - FRAME_INSETS.left - FRAME_INSETS.right, menuBar.getHeight());
+				field.setSize(getWidth() - FRAME_INSETS.left - FRAME_INSETS.right, getHeight() - menuBar.getHeight() - FRAME_INSETS.top - FRAME_INSETS.bottom);
 
 				// Resize all the icons on the squares
 				for (int i = 0; i < numRows; ++i) {
@@ -155,7 +161,7 @@ public class Board extends JFrame implements ActionListener {
 							}
 						}
 					}
-				}
+				}*/
 			}
 		});
 	}
@@ -201,7 +207,8 @@ public class Board extends JFrame implements ActionListener {
 			x = RANDOM.nextInt(numCols);
 			y = RANDOM.nextInt(numRows);
 
-			bombLocations[i] = new Point(x, y);;
+			bombLocations[i] = new Point(x, y);
+			;
 
 			// Check if there is already a bomb here
 			for (int j = 0; j < i; ++j) {
