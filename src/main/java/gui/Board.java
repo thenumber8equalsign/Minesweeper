@@ -539,7 +539,7 @@ public class Board extends JFrame implements ActionListener {
 
 	private static int[] getAvailableSaveSlots() {
 		System.out.println("Getting games");
-		return new int[]{0,1,2,3};
+		return new int[]{0,3};
 	}
 
 	private void loadGame(int slot) throws ClassNotFoundException {
