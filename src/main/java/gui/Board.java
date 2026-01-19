@@ -61,6 +61,8 @@ public class Board extends JFrame implements ActionListener {
 		// Set the content pane's preferred size because then it will automatically account for the title bar and whatnot
 		this.getContentPane().setPreferredSize(new Dimension(numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT));
 		this.pack(); // resize the frame to fit the components (the content pane)
+
+		this.setTitle("Minesweeper");
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLayout(null);
 		this.setLocationRelativeTo(null); // Center the window
