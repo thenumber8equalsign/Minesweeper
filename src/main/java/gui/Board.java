@@ -19,13 +19,11 @@ public class Board extends JFrame implements ActionListener {
 
 	static {
 		JFrame temp = new JFrame(); // Use to get the insets
-		temp.setBounds(0, 0, 100, 100);
-		temp.setVisible(true);
+		temp.pack();
 
 		FRAME_INSETS = temp.getInsets();
 
-		temp.dispose();
-
+		temp = null;
 		try {
 			NOTO_MONO = Font.createFont(Font.TRUETYPE_FONT,
 					Board.class.getClassLoader().getResourceAsStream("fonts/notoMono.ttf")).deriveFont(20f);
@@ -67,11 +65,11 @@ public class Board extends JFrame implements ActionListener {
 		this.numCols = cols;
 		this.numBombs = bombs;
 
-		this.setBounds(0, 0, numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT + FRAME_INSETS.top);
+		this.setBounds(0, 0, numCols * DEFAULT_SQUARE_LENGTH + FRAME_INSETS.left + FRAME_INSETS.right, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT + FRAME_INSETS.top + FRAME_INSETS.bottom);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setTitle("Minesweeper");
 		this.setLayout(null);
 		this.setLocationRelativeTo(null); // Center the window
-
 
 		menuBar = new JMenuBar();
 		menuBar.setFont(NOTO_MONO);
@@ -118,8 +116,9 @@ public class Board extends JFrame implements ActionListener {
 
 		// Set up the field
 		field = new JPanel();
-		field.setBounds(0, menuBar.getHeight(), getWidth(), this.getHeight() - menuBar.getHeight());
 		field.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+
+		field.setBounds(0, menuBar.getHeight(), this.getWidth(), this.getHeight() - menuBar.getHeight() - FRAME_INSETS.top - FRAME_INSETS.bottom);
 
 		generateField();
 
@@ -128,12 +127,15 @@ public class Board extends JFrame implements ActionListener {
 		this.setVisible(true);
 
 
+		System.out.println(getContentPane().getSize());
+		System.out.println(getSize());
+		System.out.println(FRAME_INSETS);
 		this.getRootPane().addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
 				// Resize the menuBar and fieldPanel
 				menuBar.setSize(getWidth(), menuBar.getHeight());
-				field.setSize(getWidth(), getHeight() - menuBar.getHeight() - FRAME_INSETS.top);
+				field.setSize(getWidth(), getHeight() - menuBar.getHeight() - FRAME_INSETS.top - FRAME_INSETS.bottom);
 
 				// Resize all the icons on the squares
 				for (int i = 0; i < numRows; ++i) {
@@ -412,7 +414,7 @@ public class Board extends JFrame implements ActionListener {
 		closeButton.setPreferredSize(newGameButton.getPreferredSize()); // Set a uniform width for the two buttons
 
 		popup.add(panel);
-		popup.pack(); // Resize the JDialog to fit its children
+		popup.pack(); // Resize the window to fit its children
 		popup.setLocationRelativeTo(this); // Center it in this window
 		popup.setResizable(false);
 		popup.setVisible(true);
