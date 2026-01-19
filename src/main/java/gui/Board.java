@@ -504,7 +504,127 @@ public class Board extends JFrame implements ActionListener {
 
 			if (menuText.equals("Game")) {
 				if (menuItemText.equals("Change Board Size")) {
-					// TODO: Implement changing board size via a JPopupMenu
+					JFrame boardSizeFrame = new JFrame("Board Size");
+					boardSizeFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+					JPanel panel = new JPanel();
+					panel.setLayout(new GridBagLayout());
+
+					GridBagConstraints c = new GridBagConstraints();
+
+					JLabel rowLabel = new JLabel("Rows:");
+					rowLabel.setFont(NOTO_MONO);
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridy = 0;
+					c.gridx = 0;
+					c.insets = new Insets(10, 10, 5, 5);
+					panel.add(rowLabel, c);
+
+					JTextField rowField = new JTextField(8);
+					rowField.setFont(NOTO_MONO);
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridy = 0;
+					c.gridx = 1;
+					c.insets = new Insets(10, 5, 5, 10);
+					panel.add(rowField, c);
+
+					JLabel colLabel = new JLabel("Columns:");
+					colLabel.setFont(NOTO_MONO);
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridy = 1;
+					c.gridx = 0;
+					c.insets = new Insets(5, 10, 5, 5);
+					panel.add(colLabel, c);
+
+					JTextField colField = new JTextField(8);
+					colField.setFont(NOTO_MONO);
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridy = 1;
+					c.gridx = 1;
+					c.insets = new Insets(5, 5, 5, 10);
+					panel.add(colField, c);
+
+					JLabel bombLabel = new JLabel("Bombs:");
+					bombLabel.setFont(NOTO_MONO);
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridy = 2;
+					c.gridx = 0;
+					c.insets = new Insets(5, 10, 5, 5);
+					panel.add(bombLabel, c);
+
+					JTextField bombField = new JTextField(8);
+					bombField.setFont(NOTO_MONO);
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridy = 2;
+					c.gridx = 1;
+					c.insets = new Insets(5, 5, 5, 10);
+					panel.add(bombField, c);
+
+					JButton okButton = new JButton("OK");
+					okButton.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent actionEvent) {
+							try {
+								int rows, cols, bombs;
+								rows = Integer.parseInt(rowField.getText());
+								cols = Integer.parseInt(colField.getText());
+								bombs = Integer.parseInt(bombField.getText());
+
+								if (rows < 0 || cols < 0 || bombs < 0) {
+									throw new Exception("A positive integer is required");
+								}
+
+								if (bombs > numRows * numCols) {
+									throw new Exception("The number of bombs can not be greater than the number of cells");
+								}
+
+								numBombs = bombs;
+								numRows = rows;
+								numCols = cols;
+
+								boardSizeFrame.dispose();
+
+								getContentPane().setPreferredSize(new Dimension(numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT));
+								pack();
+								newGame();
+
+								setLocationRelativeTo(null);
+							} catch (NumberFormatException ex) {
+								JOptionPane.showMessageDialog(null, "A positive integer is required", "Error", JOptionPane.ERROR_MESSAGE);
+							} catch (Exception ex) {
+								JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+							}
+						}
+					});
+					okButton.setFont(NOTO_MONO);
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridy = 3;
+					c.gridx = 0;
+					c.insets = new Insets(5, 10, 10, 5);
+					panel.add(okButton, c);
+
+					JButton cancelButton = new JButton("Cancel");
+					cancelButton.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent actionEvent) {
+							boardSizeFrame.dispose();
+						}
+					});
+					cancelButton.setFont(NOTO_MONO);
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridy = 3;
+					c.gridx = 1;
+					c.insets = new Insets(5, 5, 10, 10);
+					panel.add(cancelButton, c);
+
+
+					boardSizeFrame.add(panel);
+					boardSizeFrame.pack();
+					boardSizeFrame.setLocationRelativeTo(this);
+					boardSizeFrame.setResizable(false);
+					boardSizeFrame.setVisible(true);
+
+					boardSizeFrame.requestFocus();
 				}
 			} else if (menuText.equals("File")) {
 				// TODO: Implement file options
