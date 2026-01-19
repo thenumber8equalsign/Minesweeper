@@ -15,6 +15,7 @@ public class Board extends JFrame implements ActionListener {
 	public static final Font NOTO_MONO_BOLD;
 	public static final FontMetrics NOTO_MONO_METRICS;
 	public static final int MENU_BAR_HEIGHT;
+	public static final int MAX_SAVE_SLOTS = 4;
 
 	static {
 		try {
@@ -76,22 +77,87 @@ public class Board extends JFrame implements ActionListener {
 		JMenu fileOptions = new JMenu("File");
 		fileOptions.setFont(NOTO_MONO);
 
-		JMenuItem item = new JMenuItem("New");
-		item.setFont(NOTO_MONO);
-		item.addActionListener(this);
+		JMenuItem newGameItem = new JMenuItem("New");
+		newGameItem.setFont(NOTO_MONO);
+		newGameItem.addActionListener(this);
 
-		fileOptions.add(item);
+		fileOptions.add(newGameItem);
 		fileOptions.addSeparator();
 
-		item = new JMenuItem("Save");
-		item.setFont(NOTO_MONO);
-		item.addActionListener(this);
-		fileOptions.add(item);
+		int[] availableSaveSlots = getAvailableSaveSlots();
+		JMenu submenu = new JMenu("Save");
+		submenu.setFont(NOTO_MONO);
+		for (int i = 0; i < MAX_SAVE_SLOTS; ++i) {
+			JMenuItem item = new JMenuItem();
+			item.setFont(NOTO_MONO);
 
-		item = new JMenuItem("Load");
-		item.setFont(NOTO_MONO);
-		item.addActionListener(this);
-		fileOptions.add(item);
+			boolean available = false;
+			for (int j = 0; j < availableSaveSlots.length; ++j) {
+				if (availableSaveSlots[j] == i) {
+					available = true;
+					break;
+				}
+			}
+
+			final int FINAL_I = i;
+			final boolean FINAL_AVAILABLE = available;
+			item.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent actionEvent) {
+					if (!FINAL_AVAILABLE) {
+						int result = JOptionPane.showConfirmDialog(null, "Overwrite save slot?", "Ovewrite Save Slot", JOptionPane.YES_NO_OPTION);
+						if (result != JOptionPane.YES_OPTION) return;
+					}
+
+					saveGame(FINAL_I);
+				}
+			});
+
+			String text = "Slot " + i + ": ";
+			item.setText("Slot " + i + ": " + ((available) ? " Available" : " In Use"));
+
+			submenu.add(item);
+		}
+		fileOptions.add(submenu);
+
+		submenu = new JMenu("Load");
+		submenu.setFont(NOTO_MONO);
+		for (int i = 0; i < MAX_SAVE_SLOTS; ++i) {
+			JMenuItem item = new JMenuItem();
+			item.setFont(NOTO_MONO);
+
+			boolean empty = true;
+			for (int j = 0; j < availableSaveSlots.length; ++j) {
+				if (availableSaveSlots[j] == i) {
+					empty = false;
+					break;
+				}
+			}
+
+			final int FINAL_I = i;
+			final boolean FINAL_EMPTY = empty;
+			item.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent actionEvent) {
+					if (!FINAL_EMPTY) {
+						JOptionPane.showMessageDialog(null, "The slot is empty", "Empty Slot", JOptionPane.PLAIN_MESSAGE);
+						return;
+					}
+
+					try {
+						loadGame(FINAL_I);
+					} catch (ClassNotFoundException e) {
+						// This should never happen
+					}
+				}
+			});
+
+			String text = "Slot " + i + ": ";
+			item.setText("Slot " + i + ": " + ((empty) ? " Has Game" : " Empty"));
+
+			submenu.add(item);
+		}
+		fileOptions.add(submenu);
 
 		menuBar.add(fileOptions);
 
@@ -120,7 +186,7 @@ public class Board extends JFrame implements ActionListener {
 		this.add(menuBar);
 		this.add(field);
 		this.setVisible(true);
-		
+
 		this.getRootPane().addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -192,7 +258,8 @@ public class Board extends JFrame implements ActionListener {
 			x = RANDOM.nextInt(numCols);
 			y = RANDOM.nextInt(numRows);
 
-			bombLocations[i] = new Point(x, y);;
+			bombLocations[i] = new Point(x, y);
+			;
 
 			// Check if there is already a bomb here
 			for (int j = 0; j < i; ++j) {
@@ -405,7 +472,7 @@ public class Board extends JFrame implements ActionListener {
 		closeButton.setPreferredSize(newGameButton.getPreferredSize()); // Set a uniform width for the two buttons
 
 		popup.add(panel);
-		popup.pack(); // Resize the JDialog to fit its children
+		popup.pack(); // Resize the JFrame to fit its children
 		popup.setLocationRelativeTo(this); // Center it in this window
 		popup.setResizable(false);
 		popup.setVisible(true);
@@ -465,17 +532,18 @@ public class Board extends JFrame implements ActionListener {
 		generateField();
 	}
 
-	private void saveGame() {
+	// TODO: Make these read/write to files in a directory "saves"
+	private void saveGame(int slot) {
 		System.out.println("Saving game");
 	}
 
-	private static String[] getSavedGames() {
+	private static int[] getAvailableSaveSlots() {
 		System.out.println("Getting games");
-		return new String[]{};
+		return new int[]{0,1,2,3};
 	}
 
-	private void loadGame(String name) throws ClassNotFoundException {
-		System.out.println("Loading games");
+	private void loadGame(int slot) throws ClassNotFoundException {
+		System.out.println("Loading game");
 	}
 
 	@Override
@@ -627,7 +695,6 @@ public class Board extends JFrame implements ActionListener {
 					boardSizeFrame.requestFocus();
 				}
 			} else if (menuText.equals("File")) {
-				// TODO: Implement file options
 				if (menuItemText.equals("New")) {
 					newGame();
 				}
