@@ -342,6 +342,7 @@ public class Board extends JFrame implements ActionListener {
 
 					@Override
 					public void mouseClicked(MouseEvent e) {
+						if (gameOver) return;
 						if (SwingUtilities.isRightMouseButton(e)) {
 							Square s = (Square) e.getSource();
 							if (s.getIsRevealed()) return; // Don't flag a revealed square
@@ -410,6 +411,12 @@ public class Board extends JFrame implements ActionListener {
 							squares[i][j].reveal();
 						} catch (BombException ex) {
 							// This should never happen
+						}
+
+						if (squares[i][j].getIsFlagged()) {
+							// Underline squares that were flagged, but were not bombs
+							squares[i][j].setIcon(null);
+							squares[i][j].setText("<html><u><b>" + squares[i][j].getNUMBER() + "</b></u></html>");
 						}
 					}
 				}
@@ -758,7 +765,7 @@ public class Board extends JFrame implements ActionListener {
 					}
 				}
 
-				if (num == 0) {
+				if (num <= 0) {
 					// The square is satisfied
 					for (int k = 0; k < neighbors.length; ++k) {
 						try {

@@ -45,8 +45,6 @@ public class Square extends JButton {
 	 * @throws exceptions.BombException if this square is a bomb
 	 */
 	public void reveal() throws exceptions.BombException {
-		if (this.isFlagged) return;
-
 		if (isBomb()) {
 			throw new exceptions.BombException();
 		}
