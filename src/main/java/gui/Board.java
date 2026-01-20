@@ -353,10 +353,8 @@ public class Board extends JFrame implements ActionListener {
 					@Override
 					public void mouseClicked(MouseEvent e) {
 						if (gameOver) return;
-						if (SwingUtilities.isRightMouseButton(e)) {
-							Square s = (Square) e.getSource();
-							if (s.getIsRevealed()) return; // Don't flag a revealed square
-
+						Square s = (Square)e.getSource();
+						if (SwingUtilities.isRightMouseButton(e) && !s.getIsRevealed()) {
 							if (!s.getIsFlagged() && numBombs - numFlags > 0) {
 								try {
 									setSquareIcon(s, "icons/flag.png");
@@ -373,6 +371,11 @@ public class Board extends JFrame implements ActionListener {
 								--numFlags;
 								flagsPlacedLabel.setText("" + (numBombs - numFlags));
 							}
+						} else if (!SwingUtilities.isLeftMouseButton(e) && s.getIsRevealed()) {
+							// If it is not the left mouse button, but the square is already revealed,
+							// auto-reveal the neighbors, we can do this by just calling our actionPerformed
+							// We excluded left mouse button because those events are picked up by actionPerformed
+							actionPerformed(new ActionEvent(e.getSource(), 0, "command"));
 						}
 					}
 
