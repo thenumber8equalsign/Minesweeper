@@ -59,15 +59,25 @@ public class Board extends JFrame implements ActionListener {
 		this.numCols = cols;
 		this.numBombs = bombs;
 
-		// Set the content pane's preferred size because then it will automatically account for the title bar and whatnot
-		this.getContentPane().setPreferredSize(new Dimension(numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT));
-		this.pack(); // resize the frame to fit the components (the content pane)
 
-		this.setTitle("Minesweeper");
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setLayout(null);
-		this.setLocationRelativeTo(null); // Center the window
+		// Use invokeAndWait because then when we go to use the height/width of the contentPane, it will actually be the right height/width
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+				@Override
+				public void run() {
+					// Set the content pane's preferred size because then it will automatically account for the title bar and whatnot
+					getContentPane().setPreferredSize(new Dimension(numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT));
+					pack(); // resize the frame to fit the components (the content pane)
 
+					setTitle("Minesweeper");
+					setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+					setLayout(null);
+					setLocationRelativeTo(null); // Center the window
+				}
+			});
+		} catch (Exception ex) {
+
+		}
 
 		menuBar = new JMenuBar();
 		menuBar.setFont(NOTO_MONO);
@@ -179,7 +189,7 @@ public class Board extends JFrame implements ActionListener {
 
 		// Set up the field
 		field = new JPanel();
-		field.setBounds(0, menuBar.getHeight(), this.getContentPane().getWidth(), this.getContentPane().getHeight() - menuBar.getHeight());
+		field.setBounds(0, MENU_BAR_HEIGHT, this.getContentPane().getWidth(), this.getContentPane().getHeight() - MENU_BAR_HEIGHT);
 		field.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 		generateField();
 
@@ -191,8 +201,8 @@ public class Board extends JFrame implements ActionListener {
 			@Override
 			public void componentResized(ComponentEvent e) {
 				// Resize the menuBar and fieldPanel
-				menuBar.setSize(getContentPane().getWidth(), menuBar.getHeight());
-				field.setSize(getContentPane().getWidth(), getContentPane().getHeight() - menuBar.getHeight());
+				menuBar.setSize(getContentPane().getWidth(), MENU_BAR_HEIGHT);
+				field.setSize(getContentPane().getWidth(), getContentPane().getHeight() - MENU_BAR_HEIGHT);
 
 				// Resize all the icons on the squares
 				for (int i = 0; i < numRows; ++i) {
@@ -546,7 +556,7 @@ public class Board extends JFrame implements ActionListener {
 
 	private static int[] getAvailableSaveSlots() {
 		System.out.println("Getting games");
-		return new int[]{0,3};
+		return new int[]{0, 3};
 	}
 
 	private void loadGame(int slot) throws ClassNotFoundException {
@@ -661,9 +671,16 @@ public class Board extends JFrame implements ActionListener {
 
 								getContentPane().setPreferredSize(new Dimension(numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT));
 								pack();
-								newGame();
 
-								setLocationRelativeTo(null);
+								// invokeLater will wait for all the events to be processed before executing doRun.run()
+								SwingUtilities.invokeLater(new Runnable() {
+									@Override
+									public void run() {
+										newGame();
+										setLocationRelativeTo(null);
+									}
+								});
+
 							} catch (NumberFormatException ex) {
 								JOptionPane.showMessageDialog(null, "A positive integer is required", "Error", JOptionPane.ERROR_MESSAGE);
 							} catch (Exception ex) {
