@@ -7,7 +7,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Random;
 
 public class Board extends JFrame implements ActionListener {
@@ -608,7 +611,51 @@ public class Board extends JFrame implements ActionListener {
 
 	// TODO: Make these read/write to files in a directory "saves"
 	private void saveGame(int slot) {
-		System.out.println(getGameAsString());
+		if (slot < 0 || slot > 3) return;
+
+		File saveDir = new File("minesweeperSaves");
+		if (saveDir.exists() && !saveDir.isDirectory()) {
+			// Remove it
+			int res = JOptionPane.showConfirmDialog(null, "A file called minesweeperSaves exists and is not a directory, delete it?", "File Exists", JOptionPane.YES_NO_OPTION);
+			if (res != JOptionPane.YES_OPTION) {
+				return;
+			}
+
+			try {
+				if (!saveDir.delete()) {
+					JOptionPane.showMessageDialog(null, "The file was not deleted", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+
+		if (!saveDir.mkdir()) {
+			JOptionPane.showMessageDialog(null, "The directory was not created", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		File save = new File("minesweeperSaves/" + slot + ".txt");
+
+		try {
+			if (!save.createNewFile()) {
+				JOptionPane.showMessageDialog(null, "The save file was not created", "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		} catch (IOException ex) {
+			JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+		}
+
+		try {
+			FileWriter fw = new FileWriter(save, false);
+			PrintWriter pw = new PrintWriter(fw);
+			pw.write(getGameAsString());
+
+			pw.close();
+			fw.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static int[] getAvailableSaveSlots() {
