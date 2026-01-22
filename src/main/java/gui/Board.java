@@ -22,6 +22,7 @@ public class Board extends JFrame implements ActionListener {
 	public static final int MAX_SAVE_SLOTS = 4;
 
 	private static final String CONFIG_DIR;
+	private static final String SAVE_DIR = "minesweeperSaves";
 
 	static {
 		try {
@@ -47,7 +48,7 @@ public class Board extends JFrame implements ActionListener {
 				JOptionPane.showMessageDialog(null, "Could not create directory \"" + config.getPath() + "\"\nSaving and loading will be disabled", "Error", JOptionPane.ERROR_MESSAGE);
 				str = null;
 			}
- 		} else if (!config.isDirectory()) {
+		} else if (!config.isDirectory()) {
 			JOptionPane.showMessageDialog(null, "Could not create directory \"" + config.getPath() + "\" because it exists, and it is a file\nSaving and loading will be disabled", "Error", JOptionPane.ERROR_MESSAGE);
 			str = null;
 		}
@@ -139,7 +140,7 @@ public class Board extends JFrame implements ActionListener {
 				@Override
 				public void actionPerformed(ActionEvent actionEvent) {
 					if (!FINAL_AVAILABLE) {
-						int result = JOptionPane.showConfirmDialog(null, "Overwrite save slot?", "Ovewrite Save Slot", JOptionPane.YES_NO_OPTION);
+						int result = JOptionPane.showConfirmDialog(null, "Overwrite save slot?", "Overwrite Save Slot", JOptionPane.YES_NO_OPTION);
 						if (result != JOptionPane.YES_OPTION) return;
 					}
 
@@ -634,10 +635,10 @@ public class Board extends JFrame implements ActionListener {
 	private void saveGame(int slot) {
 		if (slot < 0 || slot > 3) return;
 
-		File saveDir = new File("minesweeperSaves");
+		File saveDir = new File(Paths.get(CONFIG_DIR, SAVE_DIR).toString());
 		if (saveDir.exists() && !saveDir.isDirectory()) {
 			// Remove it
-			int res = JOptionPane.showConfirmDialog(null, "A file called minesweeperSaves exists and is not a directory, delete it?", "File Exists", JOptionPane.YES_NO_OPTION);
+			int res = JOptionPane.showConfirmDialog(null, "A file called \"" + SAVE_DIR + "\" exists and is not a directory, delete it?", "File Exists", JOptionPane.YES_NO_OPTION);
 			if (res != JOptionPane.YES_OPTION) {
 				return;
 			}
@@ -652,12 +653,19 @@ public class Board extends JFrame implements ActionListener {
 			}
 		}
 
-		if (!saveDir.mkdir()) {
+
+		if (!saveDir.exists() && !saveDir.mkdir()) {
 			JOptionPane.showMessageDialog(null, "The directory was not created", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
-		File save = new File("minesweeperSaves/" + slot + ".txt");
+		File save = new File(Paths.get(CONFIG_DIR, SAVE_DIR, slot + ".txt").toString());
+
+		// Delete the file if it does exist
+		if (save.exists() && !save.delete()) {
+			JOptionPane.showMessageDialog(null, "The existing save file could not be deleted", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
 		try {
 			if (!save.createNewFile()) {
