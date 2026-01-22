@@ -590,7 +590,7 @@ public class Board extends JFrame implements ActionListener {
 		StringBuilder str = new StringBuilder();
 		str.append(String.format("%d\n%d\n%d\n", numRows, numCols, numBombs));
 		for (int i = 0; i < numRows * numCols; ++i) {
-			int row = i / numRows;
+			int row = i / numCols;
 			int col = i % numCols;
 			Square s = squares[row][col];
 
