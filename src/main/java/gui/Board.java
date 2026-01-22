@@ -353,7 +353,7 @@ public class Board extends JFrame implements ActionListener {
 					@Override
 					public void mouseClicked(MouseEvent e) {
 						if (gameOver) return;
-						Square s = (Square)e.getSource();
+						Square s = (Square) e.getSource();
 						if (SwingUtilities.isRightMouseButton(e) && !s.getIsRevealed()) {
 							if (!s.getIsFlagged() && numBombs - numFlags > 0) {
 								try {
@@ -549,12 +549,66 @@ public class Board extends JFrame implements ActionListener {
 		this.wonGame = false;
 		this.gameOver = false;
 		this.numFlags = 0;
+
+		Window[] windows = Window.getWindows();
+		for (int i = 0; i < windows.length; ++i) {
+			if (windows[i] != this) windows[i].dispose();
+		}
+
 		generateField();
+	}
+
+	private String getGameAsString() {
+		// Spec:
+		// line 0: num rows
+		// line 1: num cols
+		// line 2: num bombs
+		// rest: each individual square containing the number, 'r' for revealed, and 'f' for flagged, the order will be left to right, top to bottom
+		// Example of save file:
+		/*
+		4
+		4
+		4
+		0r
+		1r
+		2
+		22
+		0r
+		2r
+		-1f
+		-1f
+		1r
+		3r
+		-1f
+		3
+		-1
+		2
+		1
+		1
+		 */
+
+		StringBuilder str = new StringBuilder();
+		str.append(String.format("%d\n%d\n%d\n", numRows, numCols, numBombs));
+		for (int i = 0; i < numRows * numCols; ++i) {
+			int row = i / numRows;
+			int col = i % numCols;
+			Square s = squares[row][col];
+
+			str.append(s.getNUMBER());
+			if (s.getIsFlagged()) {
+				str.append('f');
+			} else if (s.getIsRevealed()) {
+				str.append('r');
+			}
+
+			str.append('\n');
+		}
+		return str.toString();
 	}
 
 	// TODO: Make these read/write to files in a directory "saves"
 	private void saveGame(int slot) {
-		System.out.println("Saving game");
+		System.out.println(getGameAsString());
 	}
 
 	private static int[] getAvailableSaveSlots() {
@@ -666,21 +720,22 @@ public class Board extends JFrame implements ActionListener {
 									throw new Exception("The number of bombs can not be greater than the number of cells");
 								}
 
-								numBombs = bombs;
-								numRows = rows;
-								numCols = cols;
 
-								boardSizeFrame.dispose();
-
-								getContentPane().setPreferredSize(new Dimension(numCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * numRows + MENU_BAR_HEIGHT));
+								getContentPane().setPreferredSize(new Dimension(cols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * rows + MENU_BAR_HEIGHT));
 								pack();
 
 								// invokeLater will wait for all the events to be processed before executing doRun.run()
 								SwingUtilities.invokeLater(new Runnable() {
 									@Override
 									public void run() {
+
+										numBombs = bombs;
+										numCols = cols;
+										numRows = rows;
+
 										newGame();
 										setLocationRelativeTo(null);
+										boardSizeFrame.dispose();
 									}
 								});
 
