@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.Random;
 
 public class Board extends JFrame implements ActionListener {
@@ -19,6 +20,8 @@ public class Board extends JFrame implements ActionListener {
 	public static final FontMetrics NOTO_MONO_METRICS;
 	public static final int MENU_BAR_HEIGHT;
 	public static final int MAX_SAVE_SLOTS = 4;
+
+	private static final String CONFIG_DIR;
 
 	static {
 		try {
@@ -32,6 +35,24 @@ public class Board extends JFrame implements ActionListener {
 		} catch (FontFormatException | IOException e) {
 			throw new RuntimeException(e);
 		}
+
+		// If there is no .config dir in the user.home directory, we need to create it
+		String home = System.getProperty("user.home");
+		File config = new File(Paths.get(home, ".config").toString());
+
+		String str = config.getPath();
+
+		if (!config.exists()) {
+			if (!config.mkdir()) {
+				JOptionPane.showMessageDialog(null, "Could not create directory \"" + config.getPath() + "\"\nSaving and loading will be disabled", "Error", JOptionPane.ERROR_MESSAGE);
+				str = null;
+			}
+ 		} else if (!config.isDirectory()) {
+			JOptionPane.showMessageDialog(null, "Could not create directory \"" + config.getPath() + "\" because it exists, and it is a file\nSaving and loading will be disabled", "Error", JOptionPane.ERROR_MESSAGE);
+			str = null;
+		}
+
+		CONFIG_DIR = str;
 	}
 
 	private static final Random RANDOM = new Random();
