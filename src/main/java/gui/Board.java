@@ -148,7 +148,6 @@ public class Board extends JFrame implements ActionListener {
 				}
 			});
 
-			String text = "Slot " + i + ": ";
 			item.setText("Slot " + i + ": " + ((available) ? " Available" : " In Use"));
 
 			submenu.add(item);
@@ -187,7 +186,6 @@ public class Board extends JFrame implements ActionListener {
 				}
 			});
 
-			String text = "Slot " + i + ": ";
 			item.setText("Slot " + i + ": " + ((empty) ? " Has Game" : " Empty"));
 
 			submenu.add(item);
@@ -682,9 +680,104 @@ public class Board extends JFrame implements ActionListener {
 
 			pw.close();
 			fw.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		} catch (IOException ex) {
+			JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
+
+
+
+		// re-create the fileOptions menu
+		JMenu fileOptions = null;
+
+		for (int i = 0; i < menuBar.getMenuCount(); ++i) {
+			if (menuBar.getMenu(i).getText().equals("File")) {
+				fileOptions = menuBar.getMenu(i);
+				break;
+			}
+		}
+
+		fileOptions.removeAll();
+
+
+		JMenuItem newGameItem = new JMenuItem("New");
+		newGameItem.setFont(NOTO_MONO);
+		newGameItem.addActionListener(this);
+
+		fileOptions.add(newGameItem);
+		fileOptions.addSeparator();
+
+		int[] availableSaveSlots = getAvailableSaveSlots();
+		JMenu submenu = new JMenu("Save");
+		submenu.setFont(NOTO_MONO);
+		for (int i = 0; i < MAX_SAVE_SLOTS; ++i) {
+			JMenuItem item = new JMenuItem();
+			item.setFont(NOTO_MONO);
+
+			boolean available = false;
+			for (int j = 0; j < availableSaveSlots.length; ++j) {
+				if (availableSaveSlots[j] == i) {
+					available = true;
+					break;
+				}
+			}
+
+			final int FINAL_I = i;
+			final boolean FINAL_AVAILABLE = available;
+			item.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent actionEvent) {
+					if (!FINAL_AVAILABLE) {
+						int result = JOptionPane.showConfirmDialog(null, "Overwrite save slot?", "Overwrite Save Slot", JOptionPane.YES_NO_OPTION);
+						if (result != JOptionPane.YES_OPTION) return;
+					}
+
+					saveGame(FINAL_I);
+				}
+			});
+
+			item.setText("Slot " + i + ": " + ((available) ? " Available" : " In Use"));
+
+			submenu.add(item);
+		}
+		fileOptions.add(submenu);
+
+		submenu = new JMenu("Load");
+		submenu.setFont(NOTO_MONO);
+		for (int i = 0; i < MAX_SAVE_SLOTS; ++i) {
+			JMenuItem item = new JMenuItem();
+			item.setFont(NOTO_MONO);
+
+			boolean empty = true;
+			for (int j = 0; j < availableSaveSlots.length; ++j) {
+				if (availableSaveSlots[j] == i) {
+					empty = false;
+					break;
+				}
+			}
+
+			final int FINAL_I = i;
+			final boolean FINAL_EMPTY = empty;
+			item.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent actionEvent) {
+					if (!FINAL_EMPTY) {
+						JOptionPane.showMessageDialog(null, "The slot is empty", "Empty Slot", JOptionPane.PLAIN_MESSAGE);
+						return;
+					}
+
+					try {
+						loadGame(FINAL_I);
+					} catch (ClassNotFoundException e) {
+						// This should never happen
+					}
+				}
+			});
+
+			item.setText("Slot " + i + ": " + ((empty) ? " Has Game" : " Empty"));
+
+			submenu.add(item);
+		}
+		fileOptions.add(submenu);
 	}
 
 	private static int[] getAvailableSaveSlots() {
