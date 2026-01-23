@@ -788,8 +788,27 @@ public class Board extends JFrame implements ActionListener {
 	}
 
 	private static int[] getAvailableSaveSlots() {
-		System.out.println("Getting games");
-		return new int[]{};
+		File[] possibleSaves = new File[4];
+		for (int i = 0; i < 4; ++i) {
+			possibleSaves[i] = new File(Paths.get(CONFIG_DIR, SAVE_DIR, i + ".txt").toString());
+		}
+
+		ArrayList<File> nonExistingSaves = new ArrayList<>();
+		for (int i = 0; i < possibleSaves.length; ++i) {
+			if (!possibleSaves[i].exists()) nonExistingSaves.add(possibleSaves[i]);
+		}
+
+		int[] availableSlots = new int[nonExistingSaves.size()];
+		for (int i = 0; i < availableSlots.length; ++i) {
+			try {
+				availableSlots[i] = Integer.parseInt(String.valueOf(nonExistingSaves.get(i).getName().charAt(0)));
+			} catch (NumberFormatException ex) {
+
+			}
+		}
+
+
+		return availableSlots;
 	}
 
 	private void loadGame(int slot) throws ClassNotFoundException {
