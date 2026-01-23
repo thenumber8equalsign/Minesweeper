@@ -628,7 +628,6 @@ public class Board extends JFrame implements ActionListener {
 		return str.toString();
 	}
 
-	// TODO: Make these read/write to files in a directory "saves"
 	private void saveGame(int slot) {
 		if (slot < 0 || slot > 3) return;
 		if (CONFIG_DIR == null) {
@@ -914,14 +913,6 @@ public class Board extends JFrame implements ActionListener {
 			isValid = false;
 		}
 
-		for (int i = 0; i < newNumRows; ++i) {
-			for (int j = 0; j < newNumCols; ++j) {
-				System.out.print(newSquares[i][j].getNUMBER());
-				System.out.print(" ");
-			}
-			System.out.println();
-		}
-
 		if (isValid) {
 			// Now, check to make sure for every square, the number of neighbor bombs match the number shown
 			for (int i = 0; i < newNumRows; ++i) {
@@ -952,10 +943,6 @@ public class Board extends JFrame implements ActionListener {
 
 					if (numNeighborBombs != newSquares[i][j].getNUMBER()) {
 						isValid = false;
-
-						System.out.println("no match");
-						System.out.println(i + " " + j);
-
 					}
 				}
 			}
@@ -1088,8 +1075,6 @@ public class Board extends JFrame implements ActionListener {
 				});
 			}
 		});
-
-
 	}
 
 	private boolean isNumber(final String STR) {
