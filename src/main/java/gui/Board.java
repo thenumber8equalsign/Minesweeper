@@ -3,15 +3,14 @@ package gui;
 import exceptions.BombException;
 
 import javax.imageio.ImageIO;
+import javax.security.auth.login.AccountNotFoundException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class Board extends JFrame implements ActionListener {
@@ -41,15 +40,15 @@ public class Board extends JFrame implements ActionListener {
 		String home = System.getProperty("user.home");
 		File config = new File(Paths.get(home, ".config").toString());
 
-		String str = config.getPath();
+		String str = config.getAbsolutePath();
 
 		if (!config.exists()) {
 			if (!config.mkdir()) {
-				JOptionPane.showMessageDialog(null, "Could not create directory \"" + config.getPath() + "\"\nSaving and loading will be disabled", "Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(null, "Could not create directory \"" + config.getAbsolutePath() + "\"\nSaving and loading will be disabled", "Error", JOptionPane.ERROR_MESSAGE);
 				str = null;
 			}
 		} else if (!config.isDirectory()) {
-			JOptionPane.showMessageDialog(null, "Could not create directory \"" + config.getPath() + "\" because it exists, and it is a file\nSaving and loading will be disabled", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "Could not create directory \"" + config.getAbsolutePath() + "\" because it exists, and it is a file\nSaving and loading will be disabled", "Error", JOptionPane.ERROR_MESSAGE);
 			str = null;
 		}
 
@@ -160,20 +159,20 @@ public class Board extends JFrame implements ActionListener {
 			JMenuItem item = new JMenuItem();
 			item.setFont(NOTO_MONO);
 
-			boolean empty = true;
+			boolean hasGame = true;
 			for (int j = 0; j < availableSaveSlots.length; ++j) {
 				if (availableSaveSlots[j] == i) {
-					empty = false;
+					hasGame = false;
 					break;
 				}
 			}
 
 			final int FINAL_I = i;
-			final boolean FINAL_EMPTY = empty;
+			final boolean FINAL_HAS_GAME = hasGame;
 			item.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent actionEvent) {
-					if (!FINAL_EMPTY) {
+					if (!FINAL_HAS_GAME) {
 						JOptionPane.showMessageDialog(null, "The slot is empty", "Empty Slot", JOptionPane.PLAIN_MESSAGE);
 						return;
 					}
@@ -186,7 +185,7 @@ public class Board extends JFrame implements ActionListener {
 				}
 			});
 
-			item.setText("Slot " + i + ": " + ((empty) ? " Has Game" : " Empty"));
+			item.setText("Slot " + i + ": " + ((hasGame) ? " Has Game" : " Empty"));
 
 			submenu.add(item);
 		}
@@ -632,6 +631,15 @@ public class Board extends JFrame implements ActionListener {
 	// TODO: Make these read/write to files in a directory "saves"
 	private void saveGame(int slot) {
 		if (slot < 0 || slot > 3) return;
+		if (CONFIG_DIR == null) {
+			JOptionPane.showMessageDialog(null, "Saving and loading is disabled", "Saving and loading disabled", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		if (gameOver) {
+			JOptionPane.showMessageDialog(null, "The game is over, it can not be saved", "Game over", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
 
 		File saveDir = new File(Paths.get(CONFIG_DIR, SAVE_DIR).toString());
 		if (saveDir.exists() && !saveDir.isDirectory()) {
@@ -683,7 +691,6 @@ public class Board extends JFrame implements ActionListener {
 		} catch (IOException ex) {
 			JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
-
 
 
 		// re-create the fileOptions menu
@@ -782,11 +789,300 @@ public class Board extends JFrame implements ActionListener {
 
 	private static int[] getAvailableSaveSlots() {
 		System.out.println("Getting games");
-		return new int[]{0, 3};
+		return new int[]{};
 	}
 
 	private void loadGame(int slot) throws ClassNotFoundException {
-		System.out.println("Loading game");
+		if (slot < 0 || slot > 3) return;
+		if (CONFIG_DIR == null) {
+			JOptionPane.showMessageDialog(null, "Saving and loading is disabled", "Warning", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+
+		File saveFile = new File(Paths.get(CONFIG_DIR, "minesweeperSaves", slot + ".txt").toString());
+
+		if (!saveFile.exists()) {
+			JOptionPane.showMessageDialog(null, "The file \"" + saveFile.getAbsolutePath() + "\"" + " does not exist", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		ArrayList<String> save;
+
+		try {
+			FileReader fr = new FileReader(saveFile);
+			BufferedReader br = new BufferedReader(fr);
+
+			save = new ArrayList<>(br.readAllLines());
+
+			br.close();
+			fr.close();
+		} catch (IOException ex) {
+			JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		boolean isValid = true;
+		Square[][] newSquares = new Square[0][0];
+
+		int newNumRows = 0;
+		int newNumCols = 0;
+		int newNumBombs = 0;
+
+		try {
+			newNumRows = Integer.parseInt(save.get(0));
+			newNumCols = Integer.parseInt(save.get(1));
+			newNumBombs = Integer.parseInt(save.get(2));
+
+			if (newNumRows <= 0 || newNumCols <= 0 || newNumBombs <= 0 || newNumBombs >= newNumCols * newNumRows) {
+				throw new Exception();
+			}
+
+			int expectedNumLines = 3 + newNumCols * newNumRows;
+			if (save.size() != expectedNumLines) {
+				throw new Exception();
+			}
+
+			newSquares = new Square[newNumRows][newNumCols];
+			for (int i = 3; i < expectedNumLines; ++i) {
+				String line = save.get(i);
+				if (line.isEmpty()) break;
+				Square square;
+
+				int squareNum;
+				boolean isFlagged = false;
+				boolean isRevealed = false;
+
+				if (!isNumber(line)) {
+					// if the line is not a number, it must contain either r or f
+					if (!line.contains("r") && !line.contains("f")) throw new Exception();
+
+					// Now, get the number portion
+					if (line.startsWith("-")) {
+						squareNum = -1;
+						line = line.substring(2);
+					} else {
+						// Since it can only be
+						squareNum = Integer.parseInt(String.valueOf(line.charAt(0)));
+						line = line.substring(1);
+					}
+
+					isRevealed = line.contains("r");
+					isFlagged = line.contains("f");
+
+					if (isFlagged && isRevealed) throw new Exception(); // A square can not be both flagged and revealed
+				} else {
+					squareNum = Integer.parseInt(line);
+				}
+
+				square = new Square(squareNum);
+				square.setIsFlagged(isFlagged);
+
+				if (isRevealed) square.reveal(); // This will also handle the BombException
+
+
+				if (squareNum < -1 || squareNum > 8) {
+					throw new Exception(); // the number is not valid
+				}
+
+				newSquares[(i - 3) / newNumCols][(i - 3) % newNumCols] = square;
+			}
+		} catch (Exception ex) {
+			isValid = false;
+		}
+
+		for (int i = 0; i < newNumRows; ++i) {
+			for (int j = 0; j < newNumCols; ++j) {
+				System.out.print(newSquares[i][j].getNUMBER());
+				System.out.print(" ");
+			}
+			System.out.println();
+		}
+
+		if (isValid) {
+			// Now, check to make sure for every square, the number of neighbor bombs match the number shown
+			for (int i = 0; i < newNumRows; ++i) {
+				for (int j = 0; j < newNumCols; ++j) {
+					if (newSquares[i][j].isBomb()) continue;
+
+					int numNeighborBombs = 0;
+
+					// There can be a maximum of 8 neighbors, test them all
+					// (i-1,j-1), (i-1, j ), (i-1,j+1)
+					// ( i ,j-1), ( i , j ), ( i ,j+1)
+					// (i+1,j-1), (i+1, j ), (i+1,j+1)
+					Point[] neighbors = new Point[]{
+							new Point(j - 1, i - 1), new Point(j, i - 1), new Point(j + 1, i - 1),
+							new Point(j - 1, i), new Point(j, i), new Point(j + 1, i),
+							new Point(j - 1, i + 1), new Point(j, i + 1), new Point(j + 1, i + 1)
+					};
+
+					for (int k = 0; k < neighbors.length; ++k) {
+						try {
+							if (newSquares[neighbors[k].y][neighbors[k].x].isBomb()) {
+								++numNeighborBombs;
+							}
+						} catch (Exception ex) {
+							// Ignore it, keep going
+						}
+					}
+
+					if (numNeighborBombs != newSquares[i][j].getNUMBER()) {
+						isValid = false;
+
+						System.out.println("no match");
+						System.out.println(i + " " + j);
+
+					}
+				}
+			}
+		}
+
+		if (!isValid) {
+			JOptionPane.showMessageDialog(null, "Save file is invalid", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		getContentPane().setPreferredSize(new Dimension(newNumCols * DEFAULT_SQUARE_LENGTH, DEFAULT_SQUARE_LENGTH * newNumRows + MENU_BAR_HEIGHT));
+		pack();
+
+
+		final int FINAL_NEW_NUM_BOMBS = newNumBombs;
+		final int FINAL_NEW_NUM_ROWS = newNumRows;
+		final int FINAL_NEW_NUM_COLS = newNumCols;
+		final Square[][] FINAL_NEW_SQUARES = newSquares;
+
+		firstClick = false;
+		hasX = false;
+		gameOver = false;
+		wonGame = false;
+
+
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				numBombs = FINAL_NEW_NUM_BOMBS;
+				numRows = FINAL_NEW_NUM_ROWS;
+				numCols = FINAL_NEW_NUM_COLS;
+				squares = FINAL_NEW_SQUARES;
+
+				// Now create the new field
+				field.removeAll(); // Clear the buttons
+				field.repaint();
+				field.revalidate(); // I have no idea why we need to do this, we just do
+				field.setLayout(new GridLayout(numRows, numCols)); // Reset the layout
+
+
+				for (int i = 0; i < numRows; ++i) {
+					for (int j = 0; j < numCols; ++j) {
+						squares[i][j].setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
+
+						// checkerboard pattern
+						if ((i + j) % 2 == 0 && !squares[i][j].getIsRevealed()) {
+							squares[i][j].setBackground(new Color(0x1B8300)); // darker green
+						} else if (!squares[i][j].getIsRevealed()) {
+							squares[i][j].setBackground(new Color(0x25B500)); // lighter green
+						}
+
+						squares[i][j].addActionListener(Board.this);
+
+						// For some stupid reason, actionPerformed doesn't get invoked when right click, so we have to manually do this
+						// Also we need to create final copies of i and j if we wish to use them in the anonymous class
+						final int FINAL_I = i;
+						final int FINAL_J = j;
+						squares[i][j].addMouseListener(new MouseAdapter() {
+							private final Color SQUARE_COLOR = squares[FINAL_I][FINAL_J].getBackground();
+
+							@Override
+							public void mouseClicked(MouseEvent e) {
+								if (gameOver) return;
+								Square s = (Square) e.getSource();
+								if (SwingUtilities.isRightMouseButton(e) && !s.getIsRevealed()) {
+									if (!s.getIsFlagged() && numBombs - numFlags > 0) {
+										try {
+											setSquareIcon(s, "icons/flag.png");
+
+											s.setIsFlagged(true);
+											++numFlags;
+											flagsPlacedLabel.setText("" + (numBombs - numFlags));
+										} catch (Exception ex) {
+											System.err.println(ex);
+										}
+									} else if (s.getIsFlagged()) {
+										s.setIcon(null);
+										s.setIsFlagged(false);
+										--numFlags;
+										flagsPlacedLabel.setText("" + (numBombs - numFlags));
+									}
+								} else if (!SwingUtilities.isLeftMouseButton(e) && s.getIsRevealed()) {
+									// If it is not the left mouse button, but the square is already revealed,
+									// auto-reveal the neighbors, we can do this by just calling our actionPerformed
+									// We excluded left mouse button because those events are picked up by actionPerformed
+									Board.this.actionPerformed(new ActionEvent(e.getSource(), 0, "command"));
+								}
+							}
+
+							@Override
+							public void mouseEntered(MouseEvent mouseEvent) {
+								if (mouseEvent.getSource() instanceof Square s) {
+									s.setBackground(new Color(0xC9C9C9));
+								}
+							}
+
+							@Override
+							public void mouseExited(MouseEvent mouseEvent) {
+								if (mouseEvent.getSource() instanceof Square s) {
+									if (!s.getIsRevealed()) {
+										s.setBackground(SQUARE_COLOR);
+									} else {
+										s.setBackground(new Color(0xFFBC5B)); // Show the revealed color if the square is revealed
+									}
+								}
+							}
+						});
+
+						squares[i][j].setFont(NOTO_MONO_BOLD);
+						squares[i][j].setFocusPainted(false); // Do not outline the text when it is focused
+						field.add(squares[i][j]);
+					}
+				}
+
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						for (int i = 0; i < numRows; ++i) {
+							for (int j = 0; j < numCols; ++j) {
+								if (squares[i][j].getIsFlagged()) {
+									try {
+										setSquareIcon(squares[i][j], "icons/flag.png");
+									} catch (IOException e) {
+
+									}
+								}
+							}
+						}
+					}
+				});
+			}
+		});
+
+
+	}
+
+	private boolean isNumber(final String STR) {
+		int i = 0;
+
+		if (STR.startsWith("-")) i = 1;
+
+		try {
+			for (; i < STR.length(); ++i) {
+				if (!Character.isDigit(STR.charAt(i))) return false;
+			}
+		} catch (ArrayIndexOutOfBoundsException ex) {
+			// This will happen if STR is "-"
+			return false;
+		}
+		return true;
 	}
 
 	@Override
