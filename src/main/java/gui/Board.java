@@ -799,6 +799,10 @@ public class Board extends JFrame implements ActionListener {
 			return;
 		}
 
+		Window[] windows = Window.getWindows();
+		for (int i = 0; i < windows.length; ++i) {
+			if (windows[i] != this) windows[i].dispose();
+		}
 
 		File saveFile = new File(Paths.get(CONFIG_DIR, "minesweeperSaves", slot + ".txt").toString());
 
