@@ -3,7 +3,6 @@ package gui;
 import exceptions.BombException;
 
 import javax.imageio.ImageIO;
-import javax.security.auth.login.AccountNotFoundException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
